@@ -15,7 +15,10 @@ const hash=s=>createHash('sha256').update(s).digest('hex');
 export async function contractManifest(){
  const paths={tools:new URL('../../../node_modules/@deepseek-ai/dsh-tools/lib/index.js',import.meta.url),policy:new URL('../../../packages/context-policy/policy.js',import.meta.url),policyAdapter:new URL('../../../packages/context-policy/index.js',import.meta.url),nodeRuntime:new URL('./.local/node_modules/@deepseek-ai/dsh-ptc-runtime-node/lib/index.js',import.meta.url)};
  const hashes=Object.fromEntries(await Promise.all(Object.entries(paths).map(async([k,p])=>[k,hash(await readFile(p))])));
- return {hostVersion:'0.2.1-alpha.2',activationMode:'next-step',bindingMode:'per-run-snapshot',readiness:'assemble-then-new-run_code',sourceHashes:hashes,fingerprint:hash(JSON.stringify(hashes))};
+ const hostVersion=JSON.parse(await readFile(new URL('../../../node_modules/@deepseek-ai/dsh-tools/package.json',import.meta.url),'utf8')).version;
+ const backendVersion=JSON.parse(await readFile(new URL('./.local/node_modules/@deepseek-ai/dsh-ptc-runtime-node/package.json',import.meta.url),'utf8')).version;
+ if(hostVersion!=='0.2.1-rc.2'||backendVersion!==hostVersion)throw Error('HOST_BACKEND_VERSION_MISMATCH');
+ return {hostVersion,activationMode:'next-step',bindingMode:'per-run-snapshot',readiness:'assemble-then-new-run_code',sourceHashes:hashes,fingerprint:hash(JSON.stringify(hashes))};
 }
 export async function createHostFixture({targetName='fixture_probe',denyTarget=false,initiallyActive=false,userText='Complete the harmless fixture task.',taskId='fixture-task',sourceId=taskId,onEvent}={}){
  if(onEvent!==undefined&&typeof onEvent!=='function')throw Error('INVALID_EVENT_CALLBACK');

@@ -42,7 +42,7 @@ async function setupHarness(){
 
 test('real Harness defineTool/domain schemas: per-session save/list/search/read isolation (native mode)', skip,async()=>{
  const {tools,services,tables,ctx,exec,saved,rag}=await setupHarness()
- const [{Context},{default:ToolRuntime},{default:SystemPrompt}]=await Promise.all([import('@deepseek-ai/cordis'),import(process.env.KNOWLEDGE_TOOLS_MODULE||'@deepseek-ai/dsh-tools'),import('@deepseek-ai/dsh-system-prompt')]);
+ const [{Context},{default:ToolRuntime},{default:SystemPrompt}]=await Promise.all([import('@deepseek-ai/cordis'),import('@deepseek-ai/dsh-tools'),import('@deepseek-ai/dsh-system-prompt')]);
  const host=new Context();await host.plugin(SystemPrompt);const hostFiber=await host.plugin(ToolRuntime,{mode:"native"});assert.equal(host.tools.resultValidationVersion,1,'patched host with canonical result validation required');for(const name of ['search_knowledge','get_knowledge','list_knowledge','knowledge_history','read_knowledge_file'])host.tools.register(tools.get(name));
  const actual=await host.tools.execute({name:'search_knowledge',arguments:{query:'shared'},agent:{id:'a'},callId:'proof-live',signal:new AbortController().signal});
  assert.equal(actual.isError,false,JSON.stringify(actual));assert.match(actual.content[0].text,/shared updated/);assert.doesNotMatch(actual.content[0].text,/_knowledgeProof/);
@@ -63,12 +63,12 @@ test('real Harness defineTool/domain schemas: per-session save/list/search/read 
 
 test('real Harness defineTool/domain schemas: per-session save/list/search/read isolation (ptc bridge)', skip,async()=>{
  const {tools,tables,saved,services}=await setupHarness()
- const [{Context},{default:ToolRuntime},{default:SystemPrompt}]=await Promise.all([import('@deepseek-ai/cordis'),import(process.env.KNOWLEDGE_TOOLS_MODULE||'@deepseek-ai/dsh-tools'),import('@deepseek-ai/dsh-system-prompt')]);
+ const [{Context},{default:ToolRuntime},{default:SystemPrompt}]=await Promise.all([import('@deepseek-ai/cordis'),import('@deepseek-ai/dsh-tools'),import('@deepseek-ai/dsh-system-prompt')]);
  const host=new Context();await host.plugin(SystemPrompt);const hostFiber=await host.plugin(ToolRuntime,{mode:"ptc"});assert.equal(host.tools.resultValidationVersion,1,'patched host with canonical result validation required');for(const name of ['search_knowledge','get_knowledge','list_knowledge','knowledge_history','read_knowledge_file'])host.tools.register(tools.get(name));
 
  const cwdByAgent=new Map([['a','/projects/a'],['b','/projects/b']]);
  host.provide('workingDirectory',{ensure:async agent=>{assert.equal(agent.session.header.cwd,cwdByAgent.get(agent.id));return cwdByAgent.get(agent.id)},set:async(agent,path)=>{cwdByAgent.set(agent.id,path);return path}});
- const {PtcRuntime}=await import('@deepseek-ai/dsh-ptc-runtime');
+ const [{PtcRuntime},{createScope}]=await Promise.all([import('@deepseek-ai/dsh-ptc-runtime'),import('@deepseek-ai/dsh-scope')]);
  let enteredA,enteredB,releaseA,releaseB;
  const aEntered=new Promise(r=>{enteredA=r}),bEntered=new Promise(r=>{enteredB=r});
  const aRelease=new Promise(r=>{releaseA=r}),bRelease=new Promise(r=>{releaseB=r});
@@ -83,7 +83,9 @@ test('real Harness defineTool/domain schemas: per-session save/list/search/read 
 
  const bridge=await host.plugin(BindingRuntime);await tables.get('entries').put(saved.id,{...tables.get('entries').get(saved.id),projectId:'/projects/a',assetId:'',updatedAt:'ptc-visible'});
  const ptcAgent={id:'a',session:{header:{cwd:'/projects/a'},append(){}}};
- const normalPtc=await host.tools.execute({name:'run_code',arguments:{code:'binding fixture',description:'test shared core bridge'},agent:ptcAgent,callId:'ptc-normal',signal:new AbortController().signal});assert.equal(normalPtc.isError,false);assert.match(JSON.stringify(normalPtc.value),/shared updated/);
+ // RC2 ties retained PTC environments to the owning agent's real scope lifecycle.
+ const scopeA=createScope(host,ptcAgent);ptcAgent.ctx=scopeA.ctx;
+ const normalPtc=await host.tools.execute({name:'run_code',arguments:{code:'binding fixture',description:'test shared core bridge'},agent:ptcAgent,callId:'ptc-normal',signal:new AbortController().signal});assert.equal(normalPtc.isError,false,JSON.stringify(normalPtc));assert.match(JSON.stringify(normalPtc.value),/shared updated/);
 
 
  const savedA=await tools.get('save_knowledge').execute({title:'isolation A',content:'isolation A private'},{agent:{id:'a'}});
@@ -105,6 +107,7 @@ test('real Harness defineTool/domain schemas: per-session save/list/search/read 
    return {text:entry.content};
  }});
  const agentB={id:'b',session:{header:{cwd:'/projects/b'},append(){}}};
+ const scopeB=createScope(host,agentB);agentB.ctx=scopeB.ctx;
  const call=(agent,code)=>host.tools.execute({name:'run_code',arguments:{code,description:'scope barrier regression'},agent,callId:code,signal:new AbortController().signal});
  const pendingA=call(ptcAgent,'interleave-a');await aEntered;
  const pendingB=call(agentB,'interleave-b');await bEntered;
@@ -117,7 +120,7 @@ test('real Harness defineTool/domain schemas: per-session save/list/search/read 
  assert.throws(()=>vault.list(),/TRUSTED_CONTEXT_REQUIRED/);
  const errorBlock=host.on('tools/post-execute',async(exec,result)=>{if(exec.name==='search_knowledge'){await tables.get('entries').put(saved.id,{...tables.get('entries').get(saved.id),projectId:'/projects/b',updatedAt:'error-revoked'});return {kind:'block',feedback:result.content,additionalContexts:[{role:'user',content:result.content}]}}return {kind:'accept'}});const errorLeaked=await host.tools.execute({name:'search_knowledge',arguments:{query:'shared'},agent:ptcAgent,callId:'error-leak',signal:new AbortController().signal});assert.equal(errorLeaked.isError,true);assert.doesNotMatch(JSON.stringify(errorLeaked),/shared updated/);errorBlock();await tables.get('entries').put(saved.id,{...tables.get('entries').get(saved.id),projectId:'/projects/a',updatedAt:'ptc-again'});
  const revokePtc=host.on('tools/post-execute',async(exec)=>{if(exec.name==='search_knowledge'){await Promise.resolve();await tables.get('entries').put(saved.id,{...tables.get('entries').get(saved.id),projectId:'/projects/b',updatedAt:'ptc-revoked'})}return {kind:'accept'}});
- const blockedPtc=await host.tools.execute({name:'run_code',arguments:{code:'binding fixture',description:'test revoked core bridge'},agent:ptcAgent,callId:'ptc-revoke',signal:new AbortController().signal});assert.equal(blockedPtc.isError,false);assert.match(JSON.stringify(blockedPtc.value),/denied/);assert.doesNotMatch(JSON.stringify(blockedPtc),/shared updated/);revokePtc();await bridge.dispose();
+ const blockedPtc=await host.tools.execute({name:'run_code',arguments:{code:'binding fixture',description:'test revoked core bridge'},agent:ptcAgent,callId:'ptc-revoke',signal:new AbortController().signal});assert.equal(blockedPtc.isError,false);assert.match(JSON.stringify(blockedPtc.value),/denied/);assert.doesNotMatch(JSON.stringify(blockedPtc),/shared updated/);revokePtc();await scopeB.dispose();await scopeA.dispose();await bridge.dispose();
  await hostFiber.dispose();
 })
 

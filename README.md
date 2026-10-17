@@ -2,7 +2,9 @@
 
 一套面向兼容 DeepSeek Harness 宿主的记忆、知识、技能与工具编排插件。它把“保留什么经验”“当前任务能读取什么”“何时加载技能和工具”“怎样确认经验确实被采用”连接到同一条任务流程中。
 
-当前为受控初版，适合在隔离宿主上部署和验证。仓库包含 **8 个插件模块、宿主兼容补丁、合成测试与接入脚本**。运行它需要已有的兼容宿主；本仓库没有独立的 Web 服务启动器，也不包含宿主发行版、模型账号或业务数据。
+当前适配 **DeepSeek Harness 0.2.1-rc.2**，适合在隔离宿主上部署和验证。仓库包含 **8 个插件模块、宿主兼容补丁、合成测试与接入脚本**。运行它需要已有的兼容宿主；本仓库没有独立的 Web 服务启动器，也不包含宿主发行版、模型账号或业务数据。
+
+更新：适配 Harness RC2，更新工具契约与前向维护流程，并验证任务执行、状态更新及跨会话记忆复用。
 
 ## 导航
 
@@ -89,10 +91,10 @@ flowchart TD
 
 |依赖|本仓库的开发验证版本|
 |---|---|
-|`@deepseek-ai/dsh-tools` 及根清单中的其他 `@deepseek-ai/dsh-*` SDK|`0.2.1-alpha.2`|
-|`@deepseek-ai/cordis`|`4.0.5-alpha.1`|
-|`@deepseek-ai/cordis-plugin-loader`|`1.0.6-alpha.1`|
-|`@deepseek-ai/schemastery`|`3.18.5-alpha.1`|
+|`@deepseek-ai/dsh-tools` 及根清单中的其他 `@deepseek-ai/dsh-*` SDK|`0.2.1-rc.2`|
+|`@deepseek-ai/cordis`|`4.0.5`|
+|`@deepseek-ai/cordis-plugin-loader`|`1.0.6`|
+|`@deepseek-ai/schemastery`|`3.18.5`|
 
 完整依赖以 [`package.json`](package.json) 和 [`package-lock.json`](package-lock.json) 为准。这是对 **SDK 版本和接口** 的约束，不代表任意同名宿主发行版都兼容。
 
@@ -151,7 +153,7 @@ node scripts/apply-host-compat.mjs --package-root "$HOST_TOOLS_PACKAGE"
 
 目录内虽含可选路由文件，但默认配置不会加载它。保留各模块原目录名，尤其是 `context-policy` 与 `dsh-skill-lifecycle` 的相邻关系。
 
-显式 `--package-root` 会修改选定 SDK 包。给现有宿主升级前，应安排停止相关进程的维护窗口，并保留原包与数据备份；不要依赖运行中的模块热替换来完成升级。脚本将原文件保存在源码仓库被忽略的 `.cache/host-compat/original` 中，校验失败时尝试恢复原文件。
+显式 `--package-root` 会修改选定 SDK 包。给现有宿主升级前，应安排停止相关进程的维护窗口；不要依赖运行中的模块热替换来完成升级。脚本先在临时目录应用并验证当前版本补丁，再复核目标摘要并替换文件，不保留旧软件版本或自动回切。失败时保持停机并修复当前版本；临时文件清理不代表多文件写入具备事务性。配置与业务数据应独立保护。
 
 ### 4. 生成并收紧本地配置
 
@@ -312,7 +314,7 @@ description: 当用户明确要求检查项目说明文档是否与代码一致�
 |file-manager|`root`、`writable`、`trash`、`media`、`thumbnails`|默认文件根为运行用户主目录、默认可写；对外部署应显式收紧|
 |skill-manager|`roots`、`bundledDir`|管理的用户来源和只读预置目录；须与 Registry 实际来源对齐|
 |context-policy|`maxAdditionalTools`、`maxSkills`、`maxKnowledgeFragments`|默认 24/2/5；工具与技能上限分别最多 24/2，片段预算为 1–5|
-|session-router|`enabled`、`maxMessageChars`、`allowCrossRoot`|默认开启、消息默认上限 4000 字符；应按需要限制跨根会话操作|
+|session-router|`enabled`、`maxMessageChars`、`allowCrossRoot`|默认配置不加入；显式加入后 `enabled` 默认开启，消息默认上限 4000 字符；应按需要限制跨根会话操作|
 
 ### 可选：工具激活时序影子采集
 
@@ -364,7 +366,7 @@ npm run verify
 
 |现象|优先检查|
 |---|---|
-|补丁报告基线或版本不匹配|选中的是否是宿主实际 SDK；对照 manifest，保留原件并评估兼容性，不强行覆盖|
+|补丁报告基线或版本不匹配|选中的是否是宿主实际 SDK；对照 manifest，在当前版本评估并修复兼容性，不强行覆盖|
 |`filterAvailability` 不存在、`HOST_RESULT_VALIDATION_REQUIRED` 或 `READER_HOST_UPGRADE_REQUIRED`|实际运行进程是否加载了已补丁的 SDK，以及是否存在重复 SDK 实例|
 |插件一直等待服务或工具没有出现|所需服务、代理/模板作用域、插件依赖和是否重复挂载官方技能工具|
 |后端可用但没有文件/技能/阅读器入口|客户端模块是否被宿主加载，所需 UI 服务是否存在；检查浏览器控制台|
@@ -378,7 +380,7 @@ npm run verify
 ## 数据、升级与隐私
 
 - 记忆目录由 `mnemo.config.dir` 指定；知识条目、索引和设置使用宿主存储域；阅读器使用自己的 `storageDir`；技能文件来自操作者授权的技能根。备份时应覆盖所选功能的对应存储，而不只是插件源码。
-- 更新前保存插件版本、宿主 SDK、配置和数据备份。在空目录验证新版本，再使用宿主维护流程切换；代码回退不等于数据格式可以无条件回退。
+- 更新前核对插件与宿主 SDK 契约，保护配置和业务数据。在空目录验证当前版本，再使用宿主维护流程部署；后续维护采取前向修复，不保留旧软件目录作为回滚方案。
 - 升级插件时重新核对补丁 manifest。保留阅读器 `vendor` 的字体、CMap、解码器和许可证；缺失静态资源可能导致只在特定文档上出现的故障。
 - 密钥、真实会话、知识正文、记忆、业务路径和机器配置留在部署者本地。不要把本地配置草稿、备份、日志或数据目录提交到仓库。
 - `.gitignore` 和 `check:privacy` 只是辅助；对外贡献前还需检查暂存内容和完整 Git 历史，必要时另用密钥扫描工具。数据文档和模型输出属于不可信内容，不能成为新的授权或系统指令。

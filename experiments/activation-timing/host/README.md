@@ -13,7 +13,9 @@ node experiments/activation-timing/host/setup.mjs
 node experiments/activation-timing/host/reproduce.mjs /absolute/private/output/host-reproduction.json
 ```
 
-`setup.mjs` 仅将固定 `0.2.1-alpha.2` 官方后端及本地服务装入忽略目录 `host/.local`，不修改根 package 或 lock。需要支持 `node:module.stripTypeScriptTypes` 的 Node；运行结果记录实际 Node 版本。重现报告含本机异常堆栈，应保存在仓库外的私人目录，不直接发布。
+`setup.mjs` 仅将固定 `0.2.1-rc.2` 官方后端及本地服务装入忽略目录 `host/.local`，不修改根 package 或 lock。需要支持 `node:module.stripTypeScriptTypes` 的 Node；运行结果记录实际 Node 版本。重现报告含本机异常堆栈，应保存在仓库外的私人目录，不直接发布。
+
+当前夹具随 RC2 前向更新，运行时读取并核对实际 SDK 与后端版本；历史冻结结果不因重新运行而改变，也不继承旧候选批准。
 
 ## 契约结果
 

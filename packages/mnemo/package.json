@@ -2,7 +2,7 @@
   "name": "dsh-mnemo",
   "version": "0.2.0",
   "private": true,
-  "description": "MNEMO \u2014 DeepSeek Harness \u4e09\u5c42\u7c7b\u8111\u8bb0\u5fc6\u63d2\u4ef6\uff1aFSRS \u5e42\u5f8b\u9057\u5fd8 + \u53cc\u5411\u5c42\u7ea7\u8fc1\u79fb + \u5b9e\u4f53\u5c42 + \u7248\u672c\u94fe + \u56de\u5f52\u95e8 + \u5b89\u5168\u63a2\u9488 + \u5feb\u6162\u53cc\u7cfb\u7edf\u8def\u7531 + \u6682\u5b58\u533a\u6355\u83b7 + \u4efb\u52a1\u590d\u76d8/\u6280\u80fd\u63d0\u70bc\u95ee\u8be2\u95ed\u73af\u3002\u96f6\u4f9d\u8d56\u7eaf ESM\u3002",
+  "description": "MNEMO — DeepSeek Harness 三层类脑记忆插件：FSRS 幂律遗忘 + 双向层级迁移 + 实体层 + 版本链 + 回归门 + 安全探针 + 快慢双系统路由 + 暂存区捕获 + 任务复盘/技能提炼问询闭环。零依赖纯 ESM。",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": "0.2.1-alpha.2",
-    "@deepseek-ai/dsh-system-prompt": "0.2.1-alpha.2"
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.2"
   }
 }
