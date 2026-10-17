@@ -1,0 +1,170 @@
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -838,6 +838,7 @@
+ function defineTool(options) {
+ 	const userExecute = options.execute;
+ 	const userFinalizeContent = options.finalizeContent;
++	const userValidateResult = options.validateResult;
+ 	const userProjectContent = options.projectContent;
+ 	const userRender = options.output.render;
+ 	const userPresentationMeta = options.output.presentationMeta;
+@@ -871,6 +872,7 @@
+ 	};
+ 	if (userProjectContent) tool.projectContent = (exec, result) => userProjectContent(exec, result);
+ 	if (userFinalizeContent) tool.finalizeContent = (exec, result) => userFinalizeContent(exec, result);
++	if (userValidateResult) tool.validateResult = (exec, result) => userValidateResult(exec, result);
+ 	if (userPresentCall) tool.presentCall = (args) => {
+ 		if (validate(args).length > 0) return void 0;
+ 		return userPresentCall(args);
+@@ -2625,6 +2627,7 @@
+ 	tools;
+ 	restrictions = new AnonymousEntries();
+ 	guards = new AnonymousEntries();
++	availability = new AnonymousEntries();
+ 	/**
+ 	* Presentation this scope's agent declared for itself, shadowing the
+ 	* deployment default. One cell rather than an entry table: two answers to
+@@ -2636,7 +2639,7 @@
+ 	}
+ 	/** Whether every contribution table in this aggregate layer is empty. */
+ 	isEmpty() {
+-		return this.tools.isEmpty() && this.restrictions.isEmpty() && this.guards.isEmpty() && this.mode === void 0;
++		return this.tools.isEmpty() && this.restrictions.isEmpty() && this.guards.isEmpty() && this.availability.isEmpty() && this.mode === void 0;
+ 	}
+ 	/** Whether every compiled restriction in this layer admits a global tool name. */
+ 	admits(name) {
+@@ -2662,6 +2665,7 @@
+ * one visibility resolver feeds presentation, lookup, and dispatch.
+ */
+ var ToolRuntime = class extends Service {
++	resultValidationVersion = 1;
+ 	static inject = ["systemPrompt"];
+ 	static Config = z.object({
+ 		mode: z.union(["native", "ptc"]).default("native"),
+@@ -2682,6 +2686,7 @@
+ 	cancellationStates = /* @__PURE__ */ new WeakMap();
+ 	/** Definition-owned final content transform snapshotted before policy begins. */
+ 	contentFinalizers = /* @__PURE__ */ new WeakMap();
++	resultValidators = /* @__PURE__ */ new WeakMap();
+ 	/** Execution-prepared content installed before post-execute policy. */
+ 	contentProjectors = /* @__PURE__ */ new WeakMap();
+ 	layers = new ScopedLayers((scope) => new ToolLayer(scope), () => {
+@@ -2922,6 +2927,20 @@
+ 			notify: false
+ 		});
+ 	}
++	/**
++	* Register a monotonic capability-availability filter. This affects native
++	* schemas, PTC SDK/bindings, lookup and execution, including scope-own tools.
++	* Filters only remove existing capabilities; they never override restrictions
++	* or other availability filters. The reserved run_code transport is exempt.
++	* @param filter - synchronous (name, definition, scope) => boolean; only true admits.
++	* @returns the exact lifecycle-owned disposer.
++	*/
++	filterAvailability(filter) {
++		if (typeof filter !== "function") throw new TypeError("tools.filterAvailability() requires a function");
++		return this.layers.effect(this.ctx, (layer) => layer.availability.append(filter), {
++			label: "tools.filterAvailability()"
++		});
++	}
+ 	/** First monotonic denial from the global then the scope chain's guard layers, farthest first. */
+ 	guardReason(exec) {
+ 		const globalReason = this.layers.global.guardReason(exec);
+@@ -2974,6 +2993,19 @@
+ 			knownNames.add(name);
+ 			visible.set(name, definition);
+ 		}
++		// Apply after own registrations so scope-owned business capabilities are
++		// filtered too. Keep the unfiltered identity sets for order/restrict validation.
++		const availabilityLayers = [this.layers.global, ...layers];
++		for (const [name, definition] of visible) {
++			let admitted = true;
++			for (const layer of availabilityLayers) {
++				for (const filter of layer.availability.values()) {
++					if (filter(name, definition, scope) !== true) { admitted = false; break; }
++				}
++				if (!admitted) break;
++			}
++			if (!admitted) visible.delete(name);
++		}
+ 		if (this.modeFor(scope) !== "native") visible.set(RUN_CODE_NAME, this.requirePtcTransport());
+ 		return {
+ 			visible,
+@@ -3155,6 +3187,7 @@
+ 			}
+ 		};
+ 		const capturedFinalizer = visible?.finalizeContent?.bind(visible);
++		const capturedValidator = visible?.validateResult?.bind(visible);
+ 		const capturedProjector = visible?.projectContent?.bind(visible);
+ 		const finalizerFor = () => collapsed && !signal.aborted ? void 0 : capturedFinalizer;
+ 		try {
+@@ -3166,6 +3199,7 @@
+ 			};
+ 			this.deferredContexts.set(execution, deferredContexts);
+ 			this.contentFinalizers.set(execution, finalizerFor());
++			this.resultValidators.set(execution, capturedValidator);
+ 			if (!collapsed) this.contentProjectors.set(execution, capturedProjector);
+ 			this.cancellationStates.set(execution, {
+ 				callerSignal: signal,
+@@ -3193,6 +3227,7 @@
+ 				arguments: void 0
+ 			};
+ 			this.contentFinalizers.set(execution, finalizerFor());
++			this.resultValidators.set(execution, capturedValidator);
+ 			return {
+ 				kind: "final-result",
+ 				exec: execution,
+@@ -3390,8 +3425,23 @@
+ 		} catch (error) {
+ 			finalResult = this.materializeFinalResult(toolErrorResult(error));
+ 		}
++		finalResult = this.validateFinalResult(exec, finalResult);
+ 		this.notifyResult(exec, finalResult);
+ 		return finalResult;
++	}
++	/** Reject invalid successful outcomes before observer or value publication. */
++	validateFinalResult(exec, result) {
++		const validateResult = this.resultValidators.get(exec);
++		if (validateResult === void 0) return result;
++		try {
++			const accepted = validateResult(exec, result);
++			if (accepted === true) return result;
++			void Promise.resolve(accepted).catch((error) => { void error; });
++		} catch (error) {
++			// Callback errors may contain rejected data; do not expose them.
++			void error;
++		}
++		return this.materializeFinalResult(toolErrorResult(new HarnessError("Tool result rejected", "TOOL_RESULT_REJECTED")));
+ 	}
+ 	/** Apply the snapshotted tool-owned content transform without exposing other result fields. */
+ 	applyFinalContent(exec, result) {
+--- a/lib/types/index.d.ts
++++ b/lib/types/index.d.ts
+@@ -148,6 +148,7 @@
+      * @returns replacement content, or `undefined` to preserve it.
+      */
+     finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;
++    validateResult?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): boolean;
+     /**
+      * Cooperative tool-call timeout budget in milliseconds. Omit for no deadline.
+      * Enforced by `@deepseek-ai/dsh-tool-call-timeout-policy` (a `tools/execute` wrapper); it
+@@ -525,6 +526,9 @@
+  * one visibility resolver feeds presentation, lookup, and dispatch.
+  */
+ export declare class ToolRuntime extends Service {
++    readonly resultValidationVersion = 1;
++    private resultValidators;
++    private validateFinalResult;
+     static inject: string[];
+     static Config: z<Config>;
+     /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
+--- a/lib/types/schema.d.ts
++++ b/lib/types/schema.d.ts
+@@ -224,6 +224,7 @@
+      * @returns replacement content, or `undefined` to preserve it.
+      */
+     finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;
++    validateResult?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): boolean;
+     /**
+      * Pure pending-state presenter.
+      * @param args - typed validated arguments.

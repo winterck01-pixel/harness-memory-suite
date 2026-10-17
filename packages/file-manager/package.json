@@ -1,0 +1,43 @@
+{
+  "name": "dsh-fileman",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Finder-style file manager for DeepSeek Harness: a sidebar icon opening a macOS Finder-like panel that browses and manages the host filesystem, with media preview/playback and a restorable trash.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "client",
+    "lib",
+    "scripts",
+    "test",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-settings-general"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "test": "node scripts/build-client.mjs && node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

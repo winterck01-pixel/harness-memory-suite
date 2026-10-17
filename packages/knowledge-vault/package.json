@@ -1,0 +1,28 @@
+{
+  "name": "@local/knowledge-vault",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Durable mixed-media knowledge vault for DeepSeek Harness.",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.2.1-alpha.2",
+    "@deepseek-ai/cordis": "~4.0.5-alpha.1"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "~3.18.5-alpha.1",
+    "zod": "^4.3.6"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

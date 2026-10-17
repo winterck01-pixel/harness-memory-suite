@@ -1,0 +1,7 @@
+- insert:
+    - id: knowledge-vault
+      name: '@local/knowledge-vault'
+      config:
+        enabled: true
+        maxRecordChars: 20000
+        maxResults: 8

@@ -1,0 +1,7 @@
+- insert:
+    - id: cross-session-agent-router
+      name: '@local/cross-session-agent-router'
+      config:
+        enabled: true
+        maxMessageChars: 4000
+        allowCrossRoot: true

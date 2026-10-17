@@ -1,0 +1,22 @@
+{
+  "package": "@deepseek-ai/dsh-tools",
+  "version": "0.2.1-alpha.2",
+  "patchSHA256": "2f9e8ae7ce26f7258faa903c1f09c047566acb0501ed3d4264c1c82ebed9a529",
+  "files": [
+    {
+      "path": "lib/index.js",
+      "before": "c427f5bf2162a5afb13bf3cc99b4df38e93f46980836d8e1d414a612181567cc",
+      "after": "85f928c230d94318300f92df2f0173962f8f5b5a00fc5e8ba9582c6c7476e7b4"
+    },
+    {
+      "path": "lib/types/index.d.ts",
+      "before": "24195f7206ed88702c983ff0de24b4956416300e06c73e088b11726eb3dd1ab8",
+      "after": "341d2e91ad1488aa9bb2ec1b59920a2fcdebf32086357d42890dd9a01eaae9c8"
+    },
+    {
+      "path": "lib/types/schema.d.ts",
+      "before": "ecb08a02eec791f3c8cec6209a27893f7b1ff58f9269abca77cfa5c173f96d14",
+      "after": "a04bd03b50fece88d451dc91460a96394c6876906aa2762ad90b4501bb28e3a1"
+    }
+  ]
+}

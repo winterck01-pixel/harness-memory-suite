@@ -1,0 +1,18 @@
+# dsh-fileman bundle patch: 宿主半路由 + 侧边栏文件管理器面板。
+- insert:
+    - id: dsh-fileman
+      name: dsh-fileman
+      config:
+        # 文件管理器的沙箱根：所有路径操作都被限制在这个目录内。留空则用 $HOME。
+        root: ''
+        # true = 删除进废纸篓（可从侧栏「废纸篓」位置放回原处）；false = 直接硬删，
+        # 同时不再提供废纸篓入口。
+        trash: true
+        # true = 允许新建/重命名/删除/移动/写入；false = 只读浏览器。
+        writable: true
+        # true = 允许浏览器内联取媒体（图片/视频/音频/PDF）用于预览与播放。
+        # 关掉后这些文件只能下载，预览面板会显示「不支持预览」。
+        media: true
+        # true = 图标视图用原图当缩略图（视频取首帧）。照片很多的目录可关掉省流量；
+        # 超过 12 MB 的单文件本来也不会被拿来当缩略图。
+        thumbnails: true

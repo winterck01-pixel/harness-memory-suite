@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "protocols": [
+    {
+      "id": "openai-chat",
+      "roles": [
+        "text",
+        "ocr",
+        "vision"
+      ],
+      "endpointKind": "base-url",
+      "path": "/chat/completions",
+      "credentialFields": [
+        "apiKey"
+      ]
+    },
+    {
+      "id": "openai-embeddings",
+      "roles": [
+        "embedding"
+      ],
+      "endpointKind": "base-url",
+      "path": "/embeddings",
+      "credentialFields": [
+        "apiKey"
+      ]
+    },
+    {
+      "id": "ark-multimodal",
+      "roles": [
+        "embedding"
+      ],
+      "endpointKind": "base-url",
+      "path": "/embeddings/multimodal",
+      "credentialFields": [
+        "apiKey"
+      ],
+      "dimensions": [
+        1024,
+        2048
+      ],
+      "oneRequestPerChunk": true,
+      "denseOnly": true
+    },
+    {
+      "id": "cohere-v2",
+      "roles": [
+        "rerank"
+      ],
+      "endpointKind": "base-url",
+      "path": "/rerank",
+      "credentialFields": [
+        "apiKey"
+      ]
+    },
+    {
+      "id": "vikingdb-rerank",
+      "roles": [
+        "rerank"
+      ],
+      "endpointKind": "origin",
+      "path": "/api/knowledge/service/rerank",
+      "credentialFields": [
+        "accessKey",
+        "secretKey"
+      ],
+      "regionRequired": true,
+      "signingService": "air",
+      "instructionModels": [
+        "doubao-seed-rerank"
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "id": "volcengine-ark-embedding",
+      "roles": [
+        "embedding"
+      ],
+      "label": "火山 Ark 文本向量（多模态接口）",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-ark",
+        "protocol": "ark-multimodal",
+        "endpoint": "https://ark.cn-beijing.volces.com/api/v3",
+        "model": "doubao-embedding-vision-251215",
+        "dimensions": 1024,
+        "queryInstructions": "Target_modality: text.\nInstruction:Retrieve text passages that answer the query.\nQuery:",
+        "documentInstructions": "Instruction:Compress the text into one word.\nQuery:",
+        "enabled": false
+      }
+    },
+    {
+      "id": "volcengine-ark-lite",
+      "roles": [
+        "text",
+        "ocr",
+        "vision"
+      ],
+      "label": "Configurable text model",
+      "ocrMethod": "vision-transcription",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-ark",
+        "protocol": "openai-chat",
+        "endpoint": "https://ark.cn-beijing.volces.com/api/v3",
+        "model": "configure-small-text-model",
+        "reasoningEffort": "",
+        "enabled": false
+      }
+    },
+    {
+      "id": "volcengine-ark-turbo",
+      "roles": [
+        "text",
+        "ocr",
+        "vision"
+      ],
+      "label": "Configurable text model",
+      "ocrMethod": "vision-transcription",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-ark",
+        "protocol": "openai-chat",
+        "endpoint": "https://ark.cn-beijing.volces.com/api/v3",
+        "model": "configure-standard-text-model",
+        "reasoningEffort": "minimal",
+        "enabled": false
+      }
+    },
+    {
+      "id": "volcengine-ark-pro",
+      "roles": [
+        "text",
+        "ocr",
+        "vision"
+      ],
+      "label": "Configurable text model",
+      "ocrMethod": "vision-transcription",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-ark",
+        "protocol": "openai-chat",
+        "endpoint": "https://ark.cn-beijing.volces.com/api/v3",
+        "model": "configure-large-text-model",
+        "reasoningEffort": "minimal",
+        "enabled": false
+      }
+    },
+    {
+      "id": "volcengine-vikingdb-doubao-seed-rerank",
+      "roles": [
+        "rerank"
+      ],
+      "label": "VikingDB doubao-seed-rerank",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-vikingdb",
+        "protocol": "vikingdb-rerank",
+        "endpoint": "https://api-knowledgebase.mlp.cn-beijing.volces.com",
+        "region": "cn-beijing",
+        "model": "doubao-seed-rerank",
+        "enabled": false
+      }
+    },
+    {
+      "id": "volcengine-vikingdb-base-multilingual-rerank",
+      "roles": [
+        "rerank"
+      ],
+      "label": "VikingDB base-multilingual-rerank",
+      "config": {
+        "source": "independent",
+        "provider": "volcengine-vikingdb",
+        "protocol": "vikingdb-rerank",
+        "endpoint": "https://api-knowledgebase.mlp.cn-beijing.volces.com",
+        "region": "cn-beijing",
+        "model": "base-multilingual-rerank",
+        "enabled": false
+      }
+    }
+  ]
+}
