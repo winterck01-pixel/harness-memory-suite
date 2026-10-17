@@ -14,9 +14,10 @@
     "test:knowledge": "npm test --workspace=@local/knowledge-vault",
     "test:files": "npm test --workspace=dsh-fileman",
     "test:policy": "npm test --workspace=dsh-context-policy",
+    "test:activation": "node --test experiments/activation-timing/pipeline/test/*.test.mjs experiments/activation-timing/evaluation/*.test.mjs experiments/activation-timing/capture.test.mjs experiments/activation-timing/acceptance/*.test.mjs",
     "check:privacy": "node scripts/check-privacy.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
-    "test": "npm run test:memory && npm run test:knowledge && npm run test:files && npm run test:policy",
+    "test": "npm run test:memory && npm run test:knowledge && npm run test:files && npm run test:policy && npm run test:activation",
     "verify": "npm run check:privacy && npm run check:syntax && npm test"
   },
   "devDependencies": {

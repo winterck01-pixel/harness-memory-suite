@@ -6,6 +6,7 @@
 
 ## 导航
 
+- [研究与经验学习状态](#研究与经验学习状态)
 - [架构与任务流程](#架构与任务流程)
 - [模块与功能](#模块与功能)
 - [环境与兼容性](#环境与兼容性)
@@ -15,6 +16,12 @@
 - [验证与故障排查](#验证与故障排查)
 - [数据、升级与隐私](#数据升级与隐私)
 - [当前边界与许可证](#当前边界与许可证)
+
+## 研究与经验学习状态
+
+本项目的经验学习设计、论文与数学模型借鉴已单独公开，见[研究导航](docs/research/README.md)、[22 项原始文献与适用限制](docs/research/REFERENCES.zh-CN.md)及[完整框架方案](docs/research/EXPERIENCE-LEARNING-DESIGN.zh-CN.md)。这些是可检验的工程设计，不表示复现了全部论文，也不涉及底层模型权重训练。
+
+首个[工具激活时序实验](docs/research/ACTIVATION-TIMING-PILOT.zh-CN.md)跑通了采集、条件候选、人工审核和冻结对照。原冻结批存在包装器失败，事后修复诊断与原结果分账；小样本信号不能推广为生产收益。生产影子接入和运行验收以[状态记录](docs/research/STATUS.zh-CN.md)为准，自动行动注入、自动晋级和技能自动注册仍关闭。
 
 ## 架构与任务流程
 
@@ -307,6 +314,26 @@ description: 当用户明确要求检查项目说明文档是否与代码一致�
 |context-policy|`maxAdditionalTools`、`maxSkills`、`maxKnowledgeFragments`|默认 24/2/5；工具与技能上限分别最多 24/2，片段预算为 1–5|
 |session-router|`enabled`、`maxMessageChars`、`allowCrossRoot`|默认开启、消息默认上限 4000 字符；应按需要限制跨根会话操作|
 
+### 可选：工具激活时序影子采集
+
+在已有 MNEMO 条目的 `config` 中追加以下字段；省略时默认关闭。宿主需支持原生 `session/event`、带序号的会话快照及 MNEMO 写锁。先在隔离实例核对合同，再明确开启：
+
+```yaml
+activationShadow:
+  enabled: true
+  contractFingerprint: "replace-with-your-verified-runtime-contract-digest"
+  maxSources: 64
+  maxEvents: 10000
+  maxTotalEvents: 10000
+  maxBytes: 8388608
+```
+
+合同摘要应绑定部署者实际的宿主、工具 SDK、激活策略、执行后端与插件版本；配置字符串本身不是运行环境认证。升级时重新核对并更换摘要，旧来源会标为合同变更，不能换标签继续使用。正常工作流只消费当前活跃会话，不回扫旧会话；`/mnemo status` 的 `activationShadow` 字段显示聚合计数、容量和暂停原因。
+
+账本位于 MNEMO 自选数据目录内的 `shadow/activation-shadow.json`。只保存事件摘要、序号和必要的工具契约元数据，不保存用户正文、代码、输出或明文工作目录。工具名称仍属于部署者的本地元数据，请勿上传账本。候选保持 `needs-review`、`instruction:null`、`productionEligible:false`；没有观测到的权限和绑定继续记为未知。
+
+本轮禁记指令会排除该轮和未接到新真人输入的续接；后续明确的新输入可恢复采集。管理员通过组件 `withdraw({sessionId, scope})` 撤回已有来源会留下永久禁用标记，该接口受同一写锁保护，目前没有额外的用户命令。只读实例拒写；容量达到上限时暂停，既有正常任务继续执行。不要为恢复采集直接删除账本中的撤回标记；容量整理和人工复审应由部署者显式维护。影子采集不向正常提示注入经验，也不自动注册技能。
+
 ## 验证与故障排查
 
 ### 本地命令
@@ -322,7 +349,7 @@ npm run test:policy
 npm run verify
 ```
 
-当前源码基线验证为 **860 通过、0 失败、5 跳过**；跳过项依赖本地 PDF/OCR 工具或专用 fixture。以自己环境中的实际结果为准，不要将跳过项记作通过。测试范围与限制见 [VALIDATION](docs/VALIDATION.md)。
+本轮源码验证为 **916 通过、0 失败、5 跳过**；跳过项依赖本地 PDF/OCR 工具或专用 fixture。以自己环境中的实际结果为准，不要将跳过项记作通过。测试范围与限制见 [VALIDATION](docs/VALIDATION.md)。
 
 ### 接入后验收
 

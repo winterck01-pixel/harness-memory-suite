@@ -65,9 +65,11 @@ export class DshAdapter {
     settleMinIntervalMin = SETTLE_MIN_INTERVAL_MIN,
     readOnly = false,
     readOnlyReason = null,
+    activationShadow = null,
     autoInject: _autoInjectDeprecated = undefined,
   } = {}) {
     this.engine = engine
+    this.activationShadow = activationShadow
     this.eventMap = eventMap
     this._captureRetryOptions = {delays:captureRetryDelays,log,onError:()=>{this.stats.errors++}}
     this.captureRetries = new CaptureRetryQueue(this._captureRetryOptions)
@@ -399,6 +401,24 @@ export class DshAdapter {
     projection.push(event)
     if (projection.length > this._projectionLimit) projection.splice(0, projection.length - this._projectionLimit)
     this._eventProjection.set(sessionId, projection)
+
+    // Consume the host's durable event stream independently of legacy turn
+    // capture, including resumed turns without fresh human text. No model call.
+    if (this.activationShadow && ['tool/result','turn/end','user/message'].includes(type)) {
+      try {
+        this.activationShadow.capture(session, {
+          scope,
+          readOnly: this.readOnly || this.engine.readOnly === true,
+          currentUserText: this._claimedInput.get(sessionId)?.turn === this._turnIds.get(sessionId)
+            ? this._claimedInput.get(sessionId)?.text ?? '' : '',
+        })
+      } catch (error) {
+        this.stats.errors++
+        const code=error?.code ?? error?.name ?? 'shadow-error'
+        if(this._lastShadowError!==code)this.log('[mnemo] shadow capture failed; task continues')
+        this._lastShadowError=code
+      }
+    }
 
     const hooks = this._classify(type)
     if (!hooks.length) return { ignored: true, type, scope }
@@ -738,6 +758,7 @@ export class DshAdapter {
       eventHistogram: Object.fromEntries([...this.eventHistogram].sort((a, b) => b[1] - a[1])),
       eventMap: this.eventMap,
       captureRetries: this.captureRetries.report(),
+      activationShadow: this.activationShadow?.report() ?? {enabled:false},
       sessions: [...this._userText.keys()],
 
       claimedInput: Object.fromEntries([...this._claimedInput].map(([k, v]) => [k, { turn: v.turn, text: String(v.text).slice(0, 120) }])),

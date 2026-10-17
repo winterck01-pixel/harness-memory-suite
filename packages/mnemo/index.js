@@ -1,3 +1,5 @@
+import {join} from 'node:path'
+import {ActivationShadowCapture} from './lib/activation-shadow.js'
 import {selectCaptureText} from './lib/capture-policy.js'
 import {memoryOptOut} from './lib/context-policy.js'
 import {registerUsageTools} from './lib/usage-tools.js'
@@ -70,7 +72,23 @@ export async function apply(ctx, config = {}) {
     if (!uq || typeof uq.ask !== 'function') throw Error('userQuestions service unavailable')
     return uq.ask(request)
   }
+  // Explicit opt-in. Shadow candidates never enter recall, maintenance,
+  // review approval or automatic promotion, regardless of configuration.
+  let activationShadow = null
+  if (config.activationShadow?.enabled === true) {
+    try {
+      activationShadow = new ActivationShadowCapture({directory:join(dataDir,'shadow'),enabled:true,
+        canWrite:()=>!closed&&!readOnly&&!engine.readOnly,
+        contractFingerprint:config.activationShadow.contractFingerprint,
+        maxEvents:config.activationShadow.maxEvents,maxSources:config.activationShadow.maxSources,
+        maxTotalEvents:config.activationShadow.maxTotalEvents,maxBytes:config.activationShadow.maxBytes})
+    } catch (error) {
+      log('[mnemo] shadow capture unavailable; main memory continues')
+      activationShadow = {capture:()=>({status:'unavailable'}),report:()=>({enabled:true,mode:'shadow-only',productionEligible:false,lastError:'ledger-unavailable'})}
+    }
+  }
   const adapter = new DshAdapter(engine, {
+    activationShadow,
 
     readOnly,
     readOnlyReason: readOnly ? 'another harness instance holds the writer lock' : null,
@@ -114,6 +132,7 @@ export async function apply(ctx, config = {}) {
   const api = {
     engine,
     adapter,
+    activationShadow,
 
     preTurn: (signal) => engine.preTurn(signal),
 
@@ -417,6 +436,7 @@ export async function apply(ctx, config = {}) {
                   scope: commandScope ?? engine.scope,
                   stats: engine.log.stats(),
                   captureRetries: adapter.captureRetries.report(),
+                  activationShadow: activationShadow?.report() ?? {enabled:false},
                   backlog: engine.backlog.report(),
                   safety: engine.safety,
 

@@ -1148,3 +1148,30 @@ for(const scenario of ['advanced-turn','changed-project','opt-out','cancelled','
   }finally{api?.detach();rmSync(dir,{recursive:true,force:true})}
  })
 }
+
+
+test('second apply cannot bypass shadow writer lease through public raw API', async () => {
+ const dir=mkdtempSync(join(tmpdir(),'mnemo-shadow-writer-'));
+ const first=fakeCtx({services:{systemPrompt:undefined}}),second=fakeCtx({services:{systemPrompt:undefined}});
+ try{
+  await plugin.apply(first,{dir,verbose:false,activationShadow:{enabled:true}});
+  const session=fakeSession('shadow-writer-source');
+  session._append('turn/start',{turn:1});session._append('user/message',humanMessage('Inspect this fixture'));
+  const scope=first.mnemo.adapter._scopeOf(session,first);
+  assert.equal(first.mnemo.activationShadow.capture(session,{scope}).status,'complete');
+  const path=join(dir,'shadow','activation-shadow.json'),before=readFileSync(path,'utf8');
+  await plugin.apply(second,{dir,verbose:false,activationShadow:{enabled:true}});
+  assert.equal(second.mnemo.readOnly,true);
+  assert.equal(second.mnemo.activationShadow.withdraw({sessionId:session.id,scope,readOnly:false}).status,'read-only');
+  assert.equal(second.mnemo.activationShadow.capture(session,{scope,readOnly:false}).status,'read-only');
+  assert.throws(()=>second.mnemo.activationShadow._save(second.mnemo.activationShadow.snapshot(),{withdraw:true}),/read-only/);
+  assert.equal(readFileSync(path,'utf8'),before);
+  const priorCount=first.mnemo.activationShadow.report().sourceCount;
+  assert.equal(first.mnemo.activationShadow.withdraw({sessionId:'unknown',scope}).status,'unknown-source');
+  assert.equal(first.mnemo.activationShadow.report().sourceCount,priorCount);
+  first.mnemo.engine.setReadOnly(true);
+  assert.equal(first.mnemo.activationShadow.withdraw({sessionId:session.id,scope}).status,'read-only');
+  assert.equal(readFileSync(path,'utf8'),before);
+  first.mnemo.engine.setReadOnly(false);
+ }finally{await second.get('mnemo')?.detach();await first.get('mnemo')?.detach();rmSync(dir,{recursive:true,force:true})}
+});
