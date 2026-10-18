@@ -1,5 +1,5 @@
 // Live declarations remain authoritative; capability-only fields never become submitted extra.
-const core=new Set(['prompt','aspect_ratio','aspectRatio','image_size','resolution','quality','n','imageCount','image_count','max_reference_images','min_reference_images']);
+const core=new Set(['prompt','aspect_ratio','aspectRatio','image_size','resolution','img_resolution','image_resolution','video_resolution','quality','n','imageCount','image_count','max_reference_images','min_reference_images']);
 const seedream5=s=>['doubao-seedream-5-0','doubao-seedream-5-0-pro'].includes(s.id);
 function targetKey(key,s){if(key==='seedream_layer_decomposition')return'layer_decomposition';if(key==='seedream_optimize_prompt_mode')return'metadata';if(seedream5(s)&&['watermark','sequential_image_generation','sequential_image_generation_options'].includes(key))return'metadata';return key;}
 function permitted(key,s){if(core.has(key))return false;if(seedream5(s)&&key==='seedream_optimize_prompt_mode')return false;const allowed=s.hints?.strict_extra_fields;return!Array.isArray(allowed)||allowed.includes(targetKey(key,s));}
