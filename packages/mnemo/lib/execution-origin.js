@@ -64,7 +64,17 @@ export function createExecutionOriginResolver({getSessions,getSchedule,allowedTa
   optOut ||= currentHumans.some(e=>disabled(text(e.data)))||!!latestHuman&&disabled(text(latestHuman.data))
   const messages=events.filter(e=>e.type==='user/message'&&['user','schedule'].includes(e.data?.source?.kind))
   const kind=currentHumans.length?'user':messages.some(e=>e.data?.source?.kind==='schedule')?'schedule':null
-  if(!kind)return result('denied','unsupported-origin',null,optOut)
+  if(!kind){
+   // The Host may announce a schedule change after turn/start but before its
+   // inbox message is materialized. This prefix cannot authorize capture yet,
+   // but is not a permanent refusal. Known preparatory Host messages can also
+   // precede that origin; unknown sources and closed turns still fail closed.
+   // Continuing human opt-outs remain authoritative.
+   const preparatoryKinds=new Set(['user-approval','runtime-context','time-context'])
+   const hasUnknownMessage=events.some(e=>e.type==='user/message'&&!preparatoryKinds.has(e.data?.source?.kind))
+   if(!events.some(e=>e.type==='turn/end')&&!hasUnknownMessage)return result('pending','origin-message-unavailable',null,optOut)
+   return result('denied','unsupported-origin',null,optOut)
+  }
   if(!latestHuman&&events[0].seq>10000)return result('incomplete','directive-history-truncated',kind,optOut)
   const binding={version:1,kind,contractFingerprint:typeof contractFingerprint==='string'?contractFingerprint:null,scopeHash:hash(scope),sessionHash:hash(session.id),turn,messageRefs:messages.map(e=>({seq:e.seq,hash:hash(e),messageHash:hash(e.data?.id??null)}))}
   const schedules=messages.filter(e=>e.data?.source?.kind==='schedule')

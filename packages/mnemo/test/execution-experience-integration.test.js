@@ -15,8 +15,8 @@ async function host(t){
  const api=services.mnemo;t.after(async()=>{await api.detach();rmSync(dir,{recursive:true,force:true})})
  const emit=(type,data)=>{const e={type,seq:rows.length,time:1000+rows.length,data};rows.push(e);for(const fn of listeners.get('session/event')??[])fn(session,e);return e}
  const addReceipt=()=>receipts.push({messageId:'fixture-delivery',scheduledAt:'2026-01-01T00:00:00.000Z',deliveredAt:'2026-01-01T00:00:01.000Z',prompt:'Inspect the synthetic fixture'})
- const scheduled=async({delayReceipt=false}={})=>{
-  emit('turn/start',{turn:1});emit('user/message',{id:'fixture-delivery',source:{kind:'schedule'},content:[{type:'text',text:'[SCHEDULE REMINDER]\nThis is a scheduled message from the user\nschedule_id_json: "fixture-task"\noccurrence_at: 2026-01-01T00:00:00.000Z\nreminder_prompt_json: "Inspect the synthetic fixture"'}]});
+ const scheduled=async({delayReceipt=false,beforeOrigin=async()=>{}}={})=>{
+  emit('turn/start',{turn:1});await beforeOrigin();emit('user/message',{id:'fixture-delivery',source:{kind:'schedule'},content:[{type:'text',text:'[SCHEDULE REMINDER]\nThis is a scheduled message from the user\nschedule_id_json: "fixture-task"\noccurrence_at: 2026-01-01T00:00:00.000Z\nreminder_prompt_json: "Inspect the synthetic fixture"'}]});
   await api.executionExperience.idle();assert.equal(api.executionExperience.list({scope:projectScope(session.header.cwd)}).length,0)
   if(!delayReceipt)addReceipt()
   emit('tool/call',{turn:1,callId:'failed-call',name:'fixture_probe',arguments:{secret:'fixture-private-argument'}})
@@ -51,4 +51,34 @@ test('receipt committed after the entire native turn is retried on schedule chan
  f.addReceipt();await f.changed();assert.equal(f.api.executionExperience.list({scope}).length,1)
  const first=f.api.executionExperience.list({scope})[0];assert.equal(first.origin.kind,'schedule');assert.equal(first.observation.toolFailureCount,1)
  await f.changed();assert.equal(f.api.executionExperience.list({scope}).length,1);assert.equal(f.api.executionExperience.list({scope})[0].id,first.id)
+})
+
+test('warm source survives a schedule change before the native schedule message is materialized',async t=>{
+ const f=await host(t),scope=projectScope(f.session.header.cwd)
+ f.emit('turn/start',{turn:0})
+ f.emit('user/message',{id:'fixture-file-setup',source:{kind:'user'},content:[{type:'file',attachment:{id:'fixture-instructions'}}]})
+ f.emit('turn/end',{turn:0,reason:{kind:'completed'}})
+ await f.api.executionExperience.idle()
+ assert.equal(f.api.executionExperience.sourceSessions({scope}).length,1)
+ const before=readFileSync(f.api.engine.log.path,'utf8'),safety=structuredClone(f.api.engine.safety)
+ await f.scheduled({beforeOrigin:async()=>{
+  f.emit('agent/inbox/spliced',{target:'next-turn',removedCount:1})
+  f.emit('step/start',{turn:1,step:1})
+  f.emit('system/message',{turn:1,step:1,message:{role:'system',content:[]}})
+  await f.changed()
+  assert.equal(f.api.executionExperience.list({scope}).length,0)
+  assert.equal(Object.values(f.api.executionExperience.snapshot().sources)[0].excludedTurns.length,0)
+ }})
+ const [candidate]=f.api.executionExperience.list({scope})
+ assert.equal(candidate.origin.kind,'schedule')
+ assert.equal(candidate.humanReview,'pending')
+ assert.equal(candidate.productionEligible,false)
+ assert.equal(candidate.frozenOnly,true)
+ assert.equal(candidate.instruction,null)
+ assert.equal((await f.api.executionExperience.validateCandidate(candidate.id,{scope})).status,'verified')
+ await f.changed()
+ assert.equal(f.api.executionExperience.list({scope}).length,1)
+ assert.equal(readFileSync(f.api.engine.log.path,'utf8'),before)
+ assert.deepEqual(f.api.engine.safety,safety)
+ assert.equal(f.api.engine.staging.pending.filter(row=>row.scope===scope).length,0)
 })

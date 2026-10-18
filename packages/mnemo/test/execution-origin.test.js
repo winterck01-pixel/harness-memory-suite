@@ -101,3 +101,52 @@ test('quoted and discussed memory-use instructions retain existing context polic
   assert.equal((await f.resolver(f.session,f.rows,f.scope)).optOut,false,prompt)
  }
 })
+
+test('open native prefixes before the origin message stay pending and recover when schedule delivery arrives',async()=>{
+ const f=fixture();f.rows.splice(1,0,
+  {type:'agent/inbox/spliced',data:{target:'next-turn',start:0,removedCount:1}},
+  {type:'step/start',data:{turn:1,step:1}},
+  {type:'system/message',data:{turn:1,step:1,message:{role:'system',content:[]}}})
+ f.rows.forEach((row,seq)=>row.seq=seq)
+ for(let size=1;size<=4;size++){
+  const r=await f.resolver(f.session,f.rows.slice(0,size),f.scope)
+  assert.equal(r.status,'pending');assert.equal(r.reason,'origin-message-unavailable');assert.equal(r.optOut,false)
+ }
+ const verified=await f.resolver(f.session,f.rows,f.scope)
+ assert.equal(verified.status,'verified');assert.equal(verified.kind,'schedule')
+})
+test('missing origin is denied once closed and explicit unsupported sources remain denied while open',async()=>{
+ const f=fixture();f.rows.splice(1,1);f.rows.forEach((row,seq)=>row.seq=seq)
+ assert.equal((await f.resolver(f.session,f.rows,f.scope)).status,'denied')
+ for(const kind of ['plugin','scheduler','model']){
+  const g=fixture();g.rows[1].data.source.kind=kind
+  assert.equal((await g.resolver(g.session,g.rows.slice(0,2),g.scope)).status,'denied')
+ }
+})
+test('continuing optout is preserved even before the next native origin message arrives',async()=>{
+ const f=fixture();f.rows.unshift({type:'turn/start',data:{turn:0}},
+  {type:'user/message',data:{source:{kind:'user'},content:[{type:'text',text:'本轮不要使用记忆'}]}},
+  {type:'turn/end',data:{turn:0,reason:'completed'}})
+ f.rows.forEach((row,seq)=>row.seq=seq)
+ const r=await f.resolver(f.session,f.rows.slice(3,4),f.scope)
+ assert.equal(r.status,'pending');assert.equal(r.optOut,true)
+})
+
+test('known preparatory context messages remain pending until an authoritative native origin arrives',async()=>{
+ for(const kind of ['user-approval','runtime-context','time-context']){
+  const f=fixture();f.rows.splice(1,0,{type:'user/message',data:{source:{kind},content:[{type:'text',text:'Preparatory host context'}]}})
+  f.rows.forEach((row,seq)=>row.seq=seq)
+  const partial=await f.resolver(f.session,f.rows.slice(0,2),f.scope)
+  assert.equal(partial.status,'pending',kind);assert.equal(partial.reason,'origin-message-unavailable');assert.equal(partial.optOut,false)
+  assert.equal((await f.resolver(f.session,f.rows,f.scope)).status,'verified')
+  f.rows.splice(2,1);f.rows.forEach((row,seq)=>row.seq=seq)
+  assert.equal((await f.resolver(f.session,f.rows,f.scope)).status,'denied',kind)
+ }
+})
+test('unknown preparatory aliases never authorize or defer a source refusal',async()=>{
+ for(const kind of ['plugin','scheduler','model','user-approval-fake']){
+  const f=fixture();f.rows.splice(1,0,{type:'user/message',data:{source:{kind},content:[{type:'text',text:'Preparatory host context'}]}})
+  f.rows.forEach((row,seq)=>row.seq=seq)
+  assert.equal((await f.resolver(f.session,f.rows.slice(0,2),f.scope)).status,'denied',kind)
+ }
+})
