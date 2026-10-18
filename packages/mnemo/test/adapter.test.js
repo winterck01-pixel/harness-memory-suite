@@ -939,10 +939,10 @@ test('★ recall 工具被注册且能查到记忆（意识卡里承诺的 recal
     await plugin.apply(ctx, { dir, verbose: false })
 
 
-    assert.equal(registered.length, 5, '应注册 5 个工具')
+    assert.equal(registered.length, 6, '应注册 6 个工具，包含独立经验候选入口')
     assert.deepEqual(registered.map((t) => t.name),
-      ['mnemo_recall', 'mnemo_evolve', 'mnemo_inspect_memory', 'mnemo_correct_memory', 'mnemo_report_usage'],
-      '注册面应稳定为这五个工具，防再漂移')
+      ['mnemo_recall', 'mnemo_experience', 'mnemo_evolve', 'mnemo_inspect_memory', 'mnemo_correct_memory', 'mnemo_report_usage'],
+      '注册面包含独立经验候选入口，普通记忆工具保持可用')
     const tool = registered[0]
     assert.equal(tool.name, 'mnemo_recall')
     assert.equal(typeof tool.execute, 'function')
@@ -991,9 +991,9 @@ test('★★ 服务晚于 apply 就绪时，工具与命令仍会补注册（实
     ctx._provideService('commands', { register(cmd) { commands.push(cmd) } })
 
 
-    assert.equal(registered.length, 5, '★ tools 就绪后必须补注册全部 5 个工具')
+    assert.equal(registered.length, 6, '★ tools 就绪后必须补注册全部 6 个工具')
     assert.deepEqual(registered.map((t) => t.name),
-      ['mnemo_recall', 'mnemo_evolve', 'mnemo_inspect_memory', 'mnemo_correct_memory', 'mnemo_report_usage'])
+      ['mnemo_recall', 'mnemo_experience', 'mnemo_evolve', 'mnemo_inspect_memory', 'mnemo_correct_memory', 'mnemo_report_usage'])
     assert.equal(registered[0].name, 'mnemo_recall')
     assert.equal(commands.length, 1, '★ commands 就绪后必须补注册 /mnemo')
     assert.equal(commands[0].name, 'mnemo')

@@ -1,5 +1,9 @@
 import {join} from 'node:path'
 import {ActivationShadowCapture} from './lib/activation-shadow.js'
+import {ExecutionExperienceCapture} from './lib/execution-experience.js'
+import {createExecutionOriginResolver} from './lib/execution-origin.js'
+import {registerExecutionExperienceTools} from './lib/execution-experience-tools.js'
+import {readCurrentTurnEvents} from './lib/turn-capture.js'
 import {selectCaptureText} from './lib/capture-policy.js'
 import {memoryOptOut} from './lib/context-policy.js'
 import {registerUsageTools} from './lib/usage-tools.js'
@@ -14,7 +18,7 @@ import { BUILD_ID, projectScope, usable } from './lib/reliability.js'
 
 
 import { MemoryEngine } from './lib/engine.js'
-import { DshAdapter, defaultDataDir } from './dsh-adapter.js'
+import { DshAdapter, defaultDataDir, safeGet } from './dsh-adapter.js'
 import { defaultConfig, mergeConfig } from './lib/config.js'
 import { runRetro } from './lib/retrospect.js'
 
@@ -87,8 +91,37 @@ export async function apply(ctx, config = {}) {
       activationShadow = {capture:()=>({status:'unavailable'}),report:()=>({enabled:true,mode:'shadow-only',productionEligible:false,lastError:'ledger-unavailable'})}
     }
   }
+  // Opt-in native execution evidence; it cannot call MemoryEngine.remember,
+  // acceptProposal, maintenance or any production promotion path.
+  let executionExperience = null
+  const resolveExecutionOrigin = createExecutionOriginResolver({
+    getSessions:()=>safeGet(ctx,'sessions'),getSchedule:()=>safeGet(ctx,'schedule'),
+    allowedTaskIds:config.executionExperience?.allowedTaskIds,
+    contractFingerprint:config.executionExperience?.contractFingerprint,
+  })
+  if(config.executionExperience?.enabled===true) {
+    try {
+      if(!/^[a-f0-9]{64}$/.test(config.executionExperience.contractFingerprint??''))throw Error('A verified host contract fingerprint is required')
+      executionExperience=new ExecutionExperienceCapture({
+        directory:join(dataDir,'execution-experience'),enabled:true,
+        contractFingerprint:config.executionExperience.contractFingerprint,
+        ...Object.fromEntries(['maxEvents','maxSources','maxTotalEvents','maxCandidates','maxBytes'].filter(k=>config.executionExperience[k]!==undefined).map(k=>[k,config.executionExperience[k]])),
+        canWrite:()=>!closed&&!readOnly&&!engine.readOnly,
+        resolveOrigin:resolveExecutionOrigin,
+        resolveSession:id=>safeGet(ctx,'sessions')?.get?.(id),
+      })
+    }catch{log('[mnemo] execution experience unavailable; main memory continues')}
+  }
+  let experienceChangeDispose = null
+  if(executionExperience&&typeof ctx.on==='function') {
+    try {
+      const watcher=ctx.on('schedule/changed',()=>{void executionExperience.revalidateAll().catch(()=>log('[mnemo] experience source revalidation unavailable'))})
+      experienceChangeDispose=typeof watcher==='function'?watcher:()=>watcher?.dispose?.()
+    }catch{log('[mnemo] experience source watcher unavailable')}
+  }
   const adapter = new DshAdapter(engine, {
     activationShadow,
+    executionExperience,
 
     readOnly,
     readOnlyReason: readOnly ? 'another harness instance holds the writer lock' : null,
@@ -133,6 +166,7 @@ export async function apply(ctx, config = {}) {
     engine,
     adapter,
     activationShadow,
+    executionExperience,
 
     preTurn: (signal) => engine.preTurn(signal),
 
@@ -184,9 +218,10 @@ export async function apply(ctx, config = {}) {
     maintenance,
     detach: () => {
       if(closed)return
-      closed=true;lifetime.abort();maintenance.closed=true;detach()
+      closed=true;lifetime.abort();maintenance.closed=true;detach();experienceChangeDispose?.()
       const finish=()=>{try{if(!readOnly)engine.checkpoint()}finally{releaseWriter()}}
-      return engine._draining ? engine._draining.catch(()=>{}).finally(finish) : finish()
+      const pending=[...(engine._draining?[engine._draining]:[]),...(executionExperience?[executionExperience.idle()]:[])]
+      return pending.length?Promise.allSettled(pending).finally(finish):finish()
     },
     _config: mergeConfig(defaultConfig(), config),
   }
@@ -278,6 +313,13 @@ export async function apply(ctx, config = {}) {
           if(usageAllowed&&!closed&&!lifetime.signal.aborted&&!exec?.signal?.aborted&&!allProjects&&usageSession&&scope&&usageTurn!=null&&adapter._turnIds.get(usageSession)===usageTurn&&currentScope===scope&&!memoryOptOut(currentText)&&!selectCaptureText(currentText).hasOptOut)
             engine.exposeUsageReferences({session:usageSession,scope,turn:usageTurn,ids:memories.map(m=>m.id)})
           return {found:memories.length,memories}
+        },
+      })
+      registerExecutionExperienceTools(tools,{capture:executionExperience,ask:askUser,assertWritable,lifetime,
+        getSessions:()=>safeGet(ctx,'sessions'),
+        allowInvocation:async session=>{
+          const source=await resolveExecutionOrigin(session,readCurrentTurnEvents(session),projectScope(session.header.cwd))
+          return source.status==='verified'&&!source.optOut
         },
       })
       registerEvolutionTools(tools,{engine,maintenance,ask:askUser,claims:maintenanceClaims,configuredScope:config.scope,lifetime,assertWritable})

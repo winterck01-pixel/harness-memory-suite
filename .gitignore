@@ -35,3 +35,6 @@ remote-connections.json
 
 # This is editor source, not operator runtime state.
 !packages/image-workshop/fixed-editor/src/state/
+
+# Private execution evidence and human review receipts
+execution-experience.json

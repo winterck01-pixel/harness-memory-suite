@@ -66,10 +66,12 @@ export class DshAdapter {
     readOnly = false,
     readOnlyReason = null,
     activationShadow = null,
+    executionExperience = null,
     autoInject: _autoInjectDeprecated = undefined,
   } = {}) {
     this.engine = engine
     this.activationShadow = activationShadow
+    this.executionExperience = executionExperience
     this.eventMap = eventMap
     this._captureRetryOptions = {delays:captureRetryDelays,log,onError:()=>{this.stats.errors++}}
     this.captureRetries = new CaptureRetryQueue(this._captureRetryOptions)
@@ -420,6 +422,17 @@ export class DshAdapter {
       }
     }
 
+    // Independent process evidence capture never calls postTurn/taskEnd or
+    // changes the legacy human-input gate. Source authority is host-validated.
+    if (this.executionExperience && ['user/message','tool/result','turn/end'].includes(type)) {
+      try {
+        Promise.resolve(this.executionExperience.capture(session,{scope,readOnly:this.readOnly||this.engine.readOnly===true})).catch(() => {
+          this.stats.errors++
+          this.log('[mnemo] execution experience capture failed; task continues')
+        })
+      } catch { this.stats.errors++;this.log('[mnemo] execution experience capture unavailable; task continues') }
+    }
+
     const hooks = this._classify(type)
     if (!hooks.length) return { ignored: true, type, scope }
 
@@ -759,6 +772,7 @@ export class DshAdapter {
       eventMap: this.eventMap,
       captureRetries: this.captureRetries.report(),
       activationShadow: this.activationShadow?.report() ?? {enabled:false},
+      executionExperience: this.executionExperience?.report() ?? {enabled:false},
       sessions: [...this._userText.keys()],
 
       claimedInput: Object.fromEntries([...this._claimedInput].map(([k, v]) => [k, { turn: v.turn, text: String(v.text).slice(0, 120) }])),
