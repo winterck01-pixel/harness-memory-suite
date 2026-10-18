@@ -1,3 +1,4 @@
+import {createMediaOperations} from './media-operations.js'
 import {directorySize} from './lib/directory-size.js'
 import { createKnowledgeFiles } from './lib/knowledge-files.js'
 import { knowledgeType } from './lib/file-types.js'
@@ -970,6 +971,7 @@ async function handleRequest(ctx, config, runtime, request, response) {
 export function apply(ctx, rawConfig) {
   const config = readConfig(rawConfig)
   const runtime = createRuntime()
+  ctx.provide?.('filemanMedia',createMediaOperations({config,runtime,trash:routes['POST trash']}))
   runtime.knowledgeFiles=createKnowledgeFiles({config,vault:()=>ctx.get?.("knowledgeVault"),resolveInside});
   ctx.provide?.("knowledgeFiles",runtime.knowledgeFiles);
   ctx.effect(()=>()=>runtime.knowledgeFiles.close());

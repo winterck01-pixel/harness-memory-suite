@@ -1,0 +1,816 @@
+{
+  "checkedAt": 1791372309924,
+  "source": "https://toapis.com/api/pricing",
+  "data": [
+    {
+      "model_name": "gpt-image-2-vip",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0169
+    },
+    {
+      "model_name": "gpt-image-2",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.015
+    },
+    {
+      "model_name": "gpt-image-2-official",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.135
+    },
+    {
+      "model_name": "gemini-3.8-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "deepseek-v4-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-image-2.5-sunburst",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0225
+    },
+    {
+      "model_name": "deepseek-v4-pro",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.1-flash-image-preview-vip",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.03
+    },
+    {
+      "model_name": "gemini-3.1-flash-image-preview",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.025
+    },
+    {
+      "model_name": "seedance-2-5",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "seedance-2-mini",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-image-2.5-flare-vip",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-image-2.5-sunburst-official",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3-pro-image-preview",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.05
+    },
+    {
+      "model_name": "gpt-image-2.5-flare",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0225
+    },
+    {
+      "model_name": "grok-video-1.5",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.01912
+    },
+    {
+      "model_name": "gemini-2.5-flash-lite-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-image-2.5-flare-official",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-image-2.5-sunburst-vip",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "doubao-seedream-5-0-pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.042857
+    },
+    {
+      "model_name": "gemini-3.6-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "grok-4.6",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "seedance-2",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3-pro-image-preview-vip",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "gemini-3.7-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-2.5-flash-image-preview",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.012
+    },
+    {
+      "model_name": "qwen3.5-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "nano_banana_2",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.03
+    },
+    {
+      "model_name": "seedance-2-fast",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "doubao-seedream-4-5",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0357
+    },
+    {
+      "model_name": "nano_banana_pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "kling-v3",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "grok-4.7",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-omni-1.1-flash-preview",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.2
+    },
+    {
+      "model_name": "gemini-3.8-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "nano_banana",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.012
+    },
+    {
+      "model_name": "kimi-k3",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "grok-video-1.0",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.01
+    },
+    {
+      "model_name": "wan3.0-video",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.12
+    },
+    {
+      "model_name": "gemini-2.5-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "happyhorse-1.1",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.085714
+    },
+    {
+      "model_name": "qwen-image-3.0",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.021
+    },
+    {
+      "model_name": "gemini-3-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "deepseek-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "kling-v2-6",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.0322
+    },
+    {
+      "model_name": "MiniMax-H3",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.13
+    },
+    {
+      "model_name": "doubao-seedream-4-0",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0285
+    },
+    {
+      "model_name": "gemini-3.5-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "doubao-seedance-1-0-pro-fast",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.0416
+    },
+    {
+      "model_name": "gemini-omni-1.1-flash-preview-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.081088
+    },
+    {
+      "model_name": "kling-3.0-turbo",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.08
+    },
+    {
+      "model_name": "deepseek-v4-flash-vision-exp",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "flux-2-pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.025
+    },
+    {
+      "model_name": "qwen-image-3.0-pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.028
+    },
+    {
+      "model_name": "gemini-3.1-pro",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "doubao-seedream-5-0",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0315
+    },
+    {
+      "model_name": "MiniMax-M2.5",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3-pro-preview-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "flux-kontext-pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.02
+    },
+    {
+      "model_name": "gemini-3.1-pro-preview-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "suno",
+      "model_type": 4,
+      "quota_type": 1,
+      "model_price": 0.05
+    },
+    {
+      "model_name": "midjourney",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.045
+    },
+    {
+      "model_name": "veo3.1-lite",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.07
+    },
+    {
+      "model_name": "gemini-3.1-flash-image-official",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0536
+    },
+    {
+      "model_name": "sora-2-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.08
+    },
+    {
+      "model_name": "wan2.6",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "viduq3-pro-fast",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.0375
+    },
+    {
+      "model_name": "gemini-omni-flash-preview-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.08
+    },
+    {
+      "model_name": "wan3.0-video-prime",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.18
+    },
+    {
+      "model_name": "flux-kontext-max",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.04
+    },
+    {
+      "model_name": "kling-v3-omni",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "MiniMax-H3-Max-Turbo",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.025
+    },
+    {
+      "model_name": "Veo3.1-quality-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.32
+    },
+    {
+      "model_name": "gemini-3-pro-image-official",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.1072
+    },
+    {
+      "model_name": "kimi-k2.6",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "veo3.1-fast",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.14
+    },
+    {
+      "model_name": "MiniMax-H3-Max",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.05
+    },
+    {
+      "model_name": "flux-2-flex",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.07
+    },
+    {
+      "model_name": "gemini-2.5-flash-image-official",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0488
+    },
+    {
+      "model_name": "gemini-omni-1.1-flash-preview-vip",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.3
+    },
+    {
+      "model_name": "wan2.6-flash",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.03
+    },
+    {
+      "model_name": "gemini-3.1-flash-lite-image-official",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.0272
+    },
+    {
+      "model_name": "viduq3-turbo",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.042857
+    },
+    {
+      "model_name": "viduq3",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.042857
+    },
+    {
+      "model_name": "viduq3-pro",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.071429
+    },
+    {
+      "model_name": "Veo3.1-lite-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.024
+    },
+    {
+      "model_name": "gemini-2.0-flash-lite-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3-max",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "MiniMax-Hailuo-2.3-Fast",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.136
+    },
+    {
+      "model_name": "gemini-3.5-flash-lite-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.5-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.6-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "kling-video-o1",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.06
+    },
+    {
+      "model_name": "qwen3.5-plus",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "MiniMax-Hailuo-02",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.194
+    },
+    {
+      "model_name": "MiniMax-Hailuo-2.3",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.194
+    },
+    {
+      "model_name": "Veo3.1-fast-official",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.08
+    },
+    {
+      "model_name": "doubao-seedance-1-0-pro-quality",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.104
+    },
+    {
+      "model_name": "doubao-seedance-1-5-pro",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.044
+    },
+    {
+      "model_name": "gemini-2.0-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-2.5-flash-image-preview-vip",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-2.5-pro-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3-flash-preview-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3-pro-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.1-flash-lite-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.1-flash-lite-preview-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.5-flash-lite",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.5-thinking",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-3.7-flash-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini-nano-banana-2.1-vip",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.02
+    },
+    {
+      "model_name": "gemini_omni",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gemini_omni_flash",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.25
+    },
+    {
+      "model_name": "gpt-4o-image",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-audio-1.5-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "gpt-realtime-1.5-official",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "grok-4.5",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "grok-imagine-1.0",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "grok-imagine-1.0-edit",
+      "model_type": 2,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "kimi-k2.5",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3.6-plus",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3.7-flash",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3.7-max",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3.7-plus",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "qwen3.8-max",
+      "model_type": 1,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "seedance-2-ext",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "seedance-2-fast-ext",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "seedance-2.5-ext",
+      "model_type": 3,
+      "quota_type": 0,
+      "model_price": 0
+    },
+    {
+      "model_name": "veo3.1-quality",
+      "model_type": 3,
+      "quota_type": 1,
+      "model_price": 0.3
+    },
+    {
+      "model_name": "vidu-image",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.066964
+    },
+    {
+      "model_name": "viduq2-fast",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.030134
+    },
+    {
+      "model_name": "viduq2-pro",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.100446
+    },
+    {
+      "model_name": "viduq3-ad",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.075
+    },
+    {
+      "model_name": "viduq3-drama",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.0875
+    },
+    {
+      "model_name": "viduq3-fast",
+      "model_type": 2,
+      "quota_type": 1,
+      "model_price": 0.050223
+    },
+    {
+      "model_name": "viduq3-mix",
+      "model_type": 3,
+      "quota_type": 2,
+      "model_price": 0.078125
+    }
+  ]
+}

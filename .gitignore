@@ -21,3 +21,14 @@ state/
 data/
 snapshots/
 reports/
+
+# Frontend output is rebuilt from the published sources.
+packages/image-studio/client.js
+packages/video-studio/client.js
+packages/image-workshop/client.js
+packages/live-film/client.js
+packages/live-film/tests/preview.js
+
+# Operator-local connection configuration
+*.local.json
+remote-connections.json

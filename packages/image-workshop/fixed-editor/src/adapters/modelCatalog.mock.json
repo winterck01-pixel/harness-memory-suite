@@ -1,0 +1,2679 @@
+{
+ "mock": true,
+ "note": "MOCK 快照：字段结构派生自生产 image-studio/model-catalog.json（2026-10-17 只读读取），仅用于 UI 开发。集成时由 core generation-adapter 读取真实 model-registry/model-catalog 替换，禁止把本文件当真实能力源。",
+ "source": "k39:/workspace/example/.dsh/profiles/web/plugins/image-studio/model-catalog.json (read-only snapshot)",
+ "models": [
+  {
+   "id": "dall-e-2",
+   "name": "dall-e-2",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1"
+   ],
+   "sizes": [
+    "256x256",
+    "512x512",
+    "1024x1024"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 1,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "dall-e-3",
+   "name": "dall-e-3",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1024x1024",
+    "1792x1024",
+    "1024x1792"
+   ],
+   "quality": [
+    "auto",
+    "standard",
+    "hd"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "doubao-seedream-4-0",
+   "name": "doubao-seedream-4-0",
+   "family": "seedream",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": null,
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "doubao-seedream-4-5",
+   "name": "doubao-seedream-4-5",
+   "family": "seedream",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "2K",
+    "4K"
+   ],
+   "quality": null,
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "doubao-seedream-5-0",
+   "name": "doubao-seedream-5-0",
+   "family": "seedream",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "2K",
+    "3K"
+   ],
+   "quality": null,
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "doubao-seedream-5-0-pro",
+   "name": "doubao-seedream-5-0-pro",
+   "family": "seedream",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "2K",
+    "1K"
+   ],
+   "quality": null,
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "flux-2-flex",
+   "name": "flux-2-flex",
+   "family": "flux_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 8,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "flux-2-pro",
+   "name": "flux-2-pro",
+   "family": "flux_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 8,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "flux-kontext-max",
+   "name": "flux-kontext-max",
+   "family": "flux_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "match_input_image",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 1,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "flux-kontext-pro",
+   "name": "flux-kontext-pro",
+   "family": "flux_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "match_input_image",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 1,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-2.5-flash-image",
+   "name": "gemini-2.5-flash-image",
+   "family": "gemini_image",
+   "adapter": "gemini_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-2.5-flash-image-official",
+   "name": "gemini-2.5-flash-image-official",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-3-pro-image-preview",
+   "name": "gemini-3-pro-image-preview",
+   "family": "gemini_image",
+   "adapter": "gemini_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-3-pro-image-official",
+   "name": "gemini-3-pro-image-official",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-3.1-flash-image-official",
+   "name": "gemini-3.1-flash-image-official",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "1:4",
+    "1:8",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:1",
+    "4:3",
+    "4:5",
+    "5:4",
+    "8:1",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "0.5K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-nano-banana-2.1-vip",
+   "name": "gemini-nano-banana-2.1-vip",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9",
+    "1:4",
+    "4:1",
+    "1:8",
+    "8:1"
+   ],
+   "sizes": [
+    "1K",
+    "0.5K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-3.1-flash-image-preview",
+   "name": "gemini-3.1-flash-image-preview",
+   "family": "gemini_image",
+   "adapter": "gemini_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "1:4",
+    "1:8",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:1",
+    "4:3",
+    "4:5",
+    "5:4",
+    "8:1",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "512",
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-4o-image",
+   "name": "gpt-4o-image",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    4
+   ],
+   "maxRefs": 5,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-1",
+   "name": "gpt-image-1",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "1:4",
+    "1:8",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:1",
+    "4:3",
+    "4:5",
+    "5:4",
+    "8:1",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "512",
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-1.5",
+   "name": "gpt-image-1.5",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "1:4",
+    "1:8",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:1",
+    "4:3",
+    "4:5",
+    "5:4",
+    "8:1",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "512",
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2",
+   "name": "gpt-image-2",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2-all",
+   "name": "gpt-image-2-all",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2-official",
+   "name": "gpt-image-2-official",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "4:3",
+    "3:4",
+    "5:4",
+    "4:5",
+    "16:9",
+    "9:16",
+    "2:1",
+    "1:2",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2-vip",
+   "name": "gpt-image-2-vip",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "4:3",
+    "3:4",
+    "5:4",
+    "4:5",
+    "16:9",
+    "9:16",
+    "2:1",
+    "1:2",
+    "21:9",
+    "9:21"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2.5-flare",
+   "name": "gpt-image-2.5-flare",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2.5-sunburst",
+   "name": "gpt-image-2.5-sunburst",
+   "family": "openai_image",
+   "adapter": "gpt_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "grok-4-1-image",
+   "name": "grok-4-1-image",
+   "family": "grok_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    4
+   ],
+   "maxRefs": 5,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "grok-4-2-image",
+   "name": "grok-4-2-image",
+   "family": "grok_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    4
+   ],
+   "maxRefs": 5,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "grok-imagine-1.0",
+   "name": "grok-imagine-1.0",
+   "family": "grok_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "grok-imagine-1.0-edit",
+   "name": "grok-imagine-1.0-edit",
+   "family": "grok_image",
+   "adapter": "toApisImageEdit",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 1,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-o1",
+   "name": "kling-image-o1",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-v1",
+   "name": "kling-image-v1",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-v1-5",
+   "name": "kling-image-v1-5",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-v2",
+   "name": "kling-image-v2",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-v2-1",
+   "name": "kling-image-v2-1",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "kling-image-v2-new",
+   "name": "kling-image-v2-new",
+   "family": "kling",
+   "adapter": "kling_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "midjourney",
+   "name": "midjourney",
+   "family": "midjourney",
+   "adapter": "toApisMidjourney",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [],
+   "quality": null,
+   "n": [
+    1
+   ],
+   "maxRefs": 16,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image",
+   "name": "qwen-image",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1328*1328",
+    "1472*1104",
+    "1104*1472",
+    "1664*928",
+    "928*1664"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "qwen-image-2.0",
+   "name": "qwen-image-2.0",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080",
+    "2048*2048"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-2.0-2026-03-03",
+   "name": "qwen-image-2.0-2026-03-03",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080",
+    "2048*2048"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-2.0-pro",
+   "name": "qwen-image-2.0-pro",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080",
+    "2048*2048"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-2.0-pro-2026-03-03",
+   "name": "qwen-image-2.0-pro-2026-03-03",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080",
+    "2048*2048"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-3.0",
+   "name": "qwen-image-3.0",
+   "family": "qwen_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-3.0-pro",
+   "name": "qwen-image-3.0-pro",
+   "family": "qwen_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 3,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit",
+   "name": "qwen-image-edit",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-2511",
+   "name": "qwen-image-edit-2511",
+   "family": "qwen_image",
+   "adapter": "specialized_one_api",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 4,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-2511-multiple-angles",
+   "name": "qwen-image-edit-2511-multiple-angles",
+   "family": "qwen_image",
+   "adapter": "specialized_one_api",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 4,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-max",
+   "name": "qwen-image-edit-max",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-max-2026-01-16",
+   "name": "qwen-image-edit-max-2026-01-16",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-plus",
+   "name": "qwen-image-edit-plus",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-plus-2025-10-30",
+   "name": "qwen-image-edit-plus-2025-10-30",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-edit-plus-2025-12-15",
+   "name": "qwen-image-edit-plus-2025-12-15",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "auto",
+    "1024*1024",
+    "1536*1536",
+    "1024*1536",
+    "1536*1024",
+    "1080*1440",
+    "1440*1080",
+    "1080*1920",
+    "1920*1080"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "maxRefs": 3,
+   "minRefs": 1,
+   "supportsReference": true
+  },
+  {
+   "id": "qwen-image-max",
+   "name": "qwen-image-max",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1328*1328",
+    "1472*1104",
+    "1104*1472",
+    "1664*928",
+    "928*1664"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "qwen-image-max-2025-12-30",
+   "name": "qwen-image-max-2025-12-30",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1328*1328",
+    "1472*1104",
+    "1104*1472",
+    "1664*928",
+    "928*1664"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "qwen-image-plus",
+   "name": "qwen-image-plus",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1328*1328",
+    "1472*1104",
+    "1104*1472",
+    "1664*928",
+    "928*1664"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "qwen-image-plus-2026-01-09",
+   "name": "qwen-image-plus-2026-01-09",
+   "family": "qwen_image",
+   "adapter": "qwen_dashscope",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1328*1328",
+    "1472*1104",
+    "1104*1472",
+    "1664*928",
+    "928*1664"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 0,
+   "minRefs": 0,
+   "supportsReference": false
+  },
+  {
+   "id": "seedream-4.0",
+   "name": "seedream-4.0",
+   "family": "seedream",
+   "adapter": "specialized_one_api",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 10,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "vidu-image",
+   "name": "vidu-image",
+   "family": "vidu_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "4:3",
+    "3:4",
+    "16:9",
+    "9:16",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 7,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "vidu-image-q2-fast",
+   "name": "vidu-image-q2-fast",
+   "family": "vidu_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "4:3",
+    "3:4",
+    "16:9",
+    "9:16",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 7,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "vidu-image-q2-pro",
+   "name": "vidu-image-q2-pro",
+   "family": "vidu_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "4:3",
+    "3:4",
+    "16:9",
+    "9:16",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 7,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "vidu-image-q3-fast",
+   "name": "vidu-image-q3-fast",
+   "family": "vidu_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "1:1",
+    "4:3",
+    "3:4",
+    "16:9",
+    "9:16",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 7,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "wan2.7-image",
+   "name": "wan2.7-image",
+   "family": "wan_image",
+   "adapter": "wan_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 9,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "wan2.7-image-pro",
+   "name": "wan2.7-image-pro",
+   "family": "wan_image",
+   "adapter": "wan_image",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high"
+   ],
+   "n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "maxRefs": 9,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "toapis/gemini-3.1-flash-image-preview",
+   "name": "toapis/gemini-3.1-flash-image-preview",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9",
+    "1:4",
+    "4:1",
+    "1:8",
+    "8:1"
+   ],
+   "sizes": [
+    "1K",
+    "0.5K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "toapis/gemini-2.5-flash-image-preview",
+   "name": "toapis/gemini-2.5-flash-image-preview",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "16:9",
+    "9:16"
+   ],
+   "sizes": [
+    "1K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "toapis/gemini-3-pro-image-preview",
+   "name": "toapis/gemini-3-pro-image-preview",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "4:5",
+    "5:4",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2.5-sunburst-official",
+   "name": "gpt-image-2.5-sunburst-official",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1024x1024",
+    "1536x1024",
+    "1024x1536"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2.5-flare-official",
+   "name": "gpt-image-2.5-flare-official",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "3:2",
+    "2:3"
+   ],
+   "sizes": [
+    "1024x1024",
+    "1536x1024",
+    "1024x1536"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gpt-image-2.5-flare-vip",
+   "name": "gpt-image-2.5-flare-vip",
+   "family": "openai_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "16:9",
+    "9:16",
+    "4:3",
+    "3:4",
+    "3:2",
+    "2:3",
+    "5:4",
+    "4:5",
+    "21:9"
+   ],
+   "sizes": [
+    "1024x1024",
+    "1536x864",
+    "864x1536",
+    "1280x960",
+    "960x1280",
+    "1536x1024",
+    "1024x1536",
+    "1280x1024",
+    "1024x1280",
+    "1792x768"
+   ],
+   "quality": [
+    "auto",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 1,
+   "minRefs": 0,
+   "supportsReference": true
+  },
+  {
+   "id": "gemini-3.1-flash-lite-image-official",
+   "name": "gemini-3.1-flash-lite-image-official",
+   "family": "gemini_image",
+   "adapter": "toApisUnifiedImage",
+   "ratios": [
+    "auto",
+    "1:1",
+    "1:4",
+    "1:8",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:1",
+    "4:3",
+    "4:5",
+    "5:4",
+    "8:1",
+    "9:16",
+    "16:9",
+    "21:9"
+   ],
+   "sizes": [
+    "1K",
+    "0.5K",
+    "2K",
+    "4K"
+   ],
+   "quality": [
+    "auto"
+   ],
+   "n": [
+    1
+   ],
+   "maxRefs": 14,
+   "minRefs": 0,
+   "supportsReference": true
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+import {readFile,writeFile,rename} from 'node:fs/promises';
+import {join} from 'node:path';
+export async function readAssetNames(dir){try{return JSON.parse(await readFile(join(dir,'asset-names.json'),'utf8'))}catch(e){if(e.code==='ENOENT')return {};throw e}}
+export function namedAssets(rows,names){return rows.map(a=>Object.prototype.hasOwnProperty.call(names,a.id)?{...a,name:names[a.id]}:a)}
+export async function saveAssetName(dir,rows,body){const row=rows.find(a=>a.id===body.id);if(!row){const e=Error('图片不存在');e.status=404;throw e}if(typeof body.name!=='string'||!body.name.trim()||body.name.trim().length>120||/[\x00-\x1f\x7f]/.test(body.name))throw Error('名称需为1至120个字符，不能包含控制字符');if(body.expectedName!==row.name){const e=Error('图片名称已被其他操作修改，请重新打开后编辑');e.status=409;throw e}const names=await readAssetNames(dir);Object.defineProperty(names,body.id,{value:body.name.trim(),writable:true,enumerable:true,configurable:true});const tmp=join(dir,'asset-names.tmp');await writeFile(tmp,JSON.stringify(names),{mode:0o600});await rename(tmp,join(dir,'asset-names.json'));return {id:body.id,name:body.name.trim()}}

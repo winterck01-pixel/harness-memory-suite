@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createServer} from 'node:http';import {fetch} from 'undici';import {transportOptions} from './image-transport.js';
+test('real Undici request encodes native FormData as multipart with filename and MIME',async()=>{
+ let received;const server=createServer(async(req,res)=>{let chunks=[];for await(const chunk of req)chunks.push(chunk);received={type:req.headers['content-type'],body:Buffer.concat(chunks).toString()};res.end('{}')});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ try{const form=new FormData();form.append('purpose','generation');form.append('file',new Blob(['image-fixture'],{type:'image/png'}),'参考图.png');const r=await fetch('http://127.0.0.1:'+server.address().port,transportOptions({method:'POST',body:form}));await r.text();assert.match(received.type,/^multipart\/form-data; boundary=/);assert.match(received.body,/name="file"; filename="参考图.png"/);assert.match(received.body,/Content-Type: image\/png/);assert.match(received.body,/image-fixture/);assert.match(received.body,/generation/);}finally{await new Promise(r=>server.close(r))}
+});

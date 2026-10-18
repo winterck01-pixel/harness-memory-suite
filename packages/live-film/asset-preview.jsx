@@ -1,0 +1,91 @@
+import {taskModelName} from './model-display.js';
+import {MidjourneyActions} from './midjourney-controls.jsx';
+import {themeCss} from './theme.js';
+import {AssetName} from './asset-name.jsx';
+import {PixelPreview} from './pixel-preview.jsx';
+import {ImageEdit} from './image-edit.jsx';
+import React,{useState,useEffect,useRef} from 'react';
+import {createPortal} from 'react-dom';
+export function zoomAt(view,factor,x,y){const scale=Math.max(.25,Math.min(8,view.scale*factor)),ratio=scale/view.scale;return {scale,x:x-(x-view.x)*ratio,y:y-(y-view.y)*ratio}}
+export function PanImage({image,prompt,zoomed,fullscreen=false}){
+ const surface=useRef(null),view=useRef({scale:1,x:0,y:0}),drag=useRef(null);
+ const [pose,setPose]=useState(view.current),[dragging,setDragging]=useState(false);
+ function update(v){view.current=v;setPose(v)}
+ useEffect(()=>{update({scale:zoomed?2:1,x:0,y:0})},[image.id,zoomed]);
+ useEffect(()=>{const el=surface.current;if(!el)return;
+  const point=e=>{const r=el.getBoundingClientRect();return [e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2]};
+  const wheel=e=>{e.preventDefault();e.stopPropagation();const [x,y]=point(e);update(zoomAt(view.current,Math.exp(-e.deltaY*(e.deltaMode===1?.04:.002)),x,y))};
+  let pinch=1;const start=e=>{e.preventDefault();pinch=e.scale||1};const change=e=>{e.preventDefault();const [x,y]=point(e);update(zoomAt(view.current,(e.scale||1)/pinch,x,y));pinch=e.scale||1};
+  el.addEventListener('wheel',wheel,{passive:false});el.addEventListener('gesturestart',start,{passive:false});el.addEventListener('gesturechange',change,{passive:false});
+  return()=>{el.removeEventListener('wheel',wheel);el.removeEventListener('gesturestart',start);el.removeEventListener('gesturechange',change)}
+ },[]);
+ function stop(e){drag.current=null;setDragging(false);if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}
+ return <div ref={surface} className="dsh-pan-surface" aria-label="可拖拽缩放的图片" style={{position:'relative',width:'100%',height:'100%',minHeight:0,flex:1,overflow:'hidden',touchAction:'none',cursor:dragging?'grabbing':'grab',userSelect:'none'}}
+ onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,view:view.current};setDragging(true)}}
+ onPointerMove={e=>{const d=drag.current;if(d?.id===e.pointerId)update({...d.view,x:d.view.x+e.clientX-d.x,y:d.view.y+e.clientY-d.y})}}
+ onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={()=>{drag.current=null;setDragging(false)}}>
+ <img draggable={false} alt={prompt} src={image.previewUrl||('/api/image-studio/image?id='+encodeURIComponent(image.id))} style={{display:'block',width:'100%',height:'100%',objectFit:'contain',maxWidth:'none',transform:'translate('+pose.x+'px,'+pose.y+'px) scale('+pose.scale+')',transformOrigin:'center',pointerEvents:'none'}}/>
+ <output style={{position:'absolute',bottom:14,left:16,color:'#fff',background:'#17191cba',padding:'4px 8px',borderRadius:6,pointerEvents:'none'}}>{Math.round(pose.scale*100)}%</output></div>
+}
+export const galleryCss=themeCss+`
+.dsh-session-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+.dsh-history-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}.dsh-history-card{padding:0;text-align:left;color:inherit;background:var(--dsw-alias-bg-layer-1,#fff);border:1px solid var(--dsw-alias-border-l1,#ddd);border-radius:12px;overflow:hidden;cursor:pointer;min-width:0;transition:box-shadow .15s,transform .15s}.dsh-history-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px #0002}.dsh-history-thumb{aspect-ratio:1.15;background:var(--dsw-alias-bg-layer-2,#eee);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}.dsh-history-thumb img{width:100%;height:100%;object-fit:contain}.dsh-history-caption{padding:10px 12px}.dsh-history-caption p{margin:0 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dsh-history-badge{position:absolute;bottom:8px;right:8px;padding:3px 7px;border-radius:6px;background:#202432b8;color:#fff;font-size:12px}.dsh-history-preview{width:min(1100px,94vw);height:min(780px,92vh);padding:16px;box-sizing:border-box;display:flex;flex-direction:column;background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-primary);border-radius:16px;box-shadow:0 16px 80px #0008}.dsh-history-preview.is-fullscreen{width:100vw;height:100vh;border-radius:0}.dsh-preview-body{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;min-height:0;flex:1}.dsh-preview-stage{overflow:auto;background:var(--dsw-alias-bg-layer-2,#eee);border-radius:10px;padding:14px;min-width:0}.dsh-preview-stage>div{max-width:none!important}.dsh-preview-detail{overflow:auto;font-size:13px;padding:8px;line-height:1.6}.dsh-preview-detail dt{opacity:.65;margin-top:14px}.dsh-preview-detail dd{margin:4px 0;overflow-wrap:anywhere}.dsh-gallery-filters{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.dsh-gallery-filters [aria-pressed=true]{border-color:#4d7cfa;color:#4d7cfa}@media(max-width:850px){.dsh-history-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dsh-preview-body{grid-template-columns:minmax(0,1fr) 220px}}@media(max-width:600px){.dsh-preview-body{display:flex;flex-direction:column;overflow:auto}.dsh-preview-stage{flex-shrink:0}.dsh-preview-detail{overflow:visible}.dsh-history-grid{gap:8px}.dsh-history-caption{padding:8px}}
+.dsh-history-preview.is-fullscreen{padding:0;background:#090a0c;color:#fff}.is-fullscreen>header{position:absolute;top:12px;left:16px;right:16px;z-index:5;padding:8px;border-radius:10px;background:#17191cba}.is-fullscreen .dsh-preview-detail{display:none}.is-fullscreen .dsh-preview-body{display:block}.is-fullscreen .dsh-preview-stage{padding:0;border-radius:0;background:#090a0c;height:100vh}.is-fullscreen .dsh-preview-stage .dsh-image-result{position:fixed;inset:0;background:#090a0c}.is-fullscreen .dsh-preview-stage .dsh-image-result>a{display:block;width:100%;height:100%}.is-fullscreen .dsh-image-actions{top:76px;z-index:6}.is-fullscreen [aria-label="生成版本选择"]{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;padding:8px;border-radius:10px;background:#17191cba;color:#fff}
+
+`;
+const fitCss=`
+.dsh-preview-stage{position:relative}
+.dsh-preview-stage:has(.dsh-pan-surface){display:flex;flex-direction:column;background:transparent;padding:0;overflow:hidden;min-height:0}
+.dsh-preview-stage>.dsh-image-result:has(.dsh-pan-surface){flex:1;display:flex;min-height:0}
+.dsh-pan-surface{background:var(--dsw-alias-bg-layer-2,#eee);border-radius:10px}
+.dsh-preview-stack{flex:1;min-height:0;display:flex;flex-direction:column;padding-top:0!important}
+.dsh-preview-stack-layers{flex:1;min-height:0;display:flex;flex-direction:column}
+.dsh-preview-stack-card{flex:1;min-height:0!important;display:flex;flex-direction:column;border:0!important}
+.dsh-preview-stack-card>.dsh-image-result{flex:1;min-height:0;display:flex;flex-direction:column}
+.dsh-preview-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:8;width:44px;height:52px;border:1px solid #aab2be66;border-radius:9px;background:#60687555;color:#c9ced6;font-size:30px;cursor:pointer;touch-action:manipulation}
+.dsh-preview-nav.previous{left:10px}.dsh-preview-nav.next{right:10px}.dsh-preview-nav:disabled{opacity:.25;cursor:default}.dsh-preview-nav:hover:not(:disabled){background:#74baff2e;border-color:#8ccaff;color:#c9e7ff}.dsh-preview-nav:focus-visible{outline:2px solid #8ccaff;outline-offset:2px}
+.is-fullscreen .dsh-pan-surface{border-radius:0}
+@media(max-width:600px){.dsh-preview-stage:has(.dsh-pan-surface){height:55vh;flex:none}.is-fullscreen .dsh-preview-stage:has(.dsh-pan-surface){height:100vh}}
+`;
+const compactCss=`
+.dsh-history-preview{position:relative}
+.dsh-preview-close{position:absolute;right:12px;top:12px;z-index:12;width:36px;height:36px;padding:0!important}
+.dsh-preview-title{display:block;padding-right:40px;margin-bottom:16px;overflow-wrap:anywhere}
+.dsh-preview-detail>.dsh-preview-action{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #8883}
+.dsh-preview-controls{position:absolute;right:12px;bottom:12px;display:flex;gap:2px;z-index:9;padding:2px;border:1px solid #ffffff22;border-radius:9px;background:#23283099;color:#e1e5ec;backdrop-filter:blur(8px)}
+.dsh-preview-controls button,.dsh-preview-controls a{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:7px;padding:0;background:transparent;color:inherit;cursor:pointer;text-decoration:none}
+.dsh-preview-controls button:hover,.dsh-preview-controls a:hover{background:#74baff2e;color:#c9e7ff}.dsh-preview-controls button:focus-visible,.dsh-preview-controls a:focus-visible{outline:2px solid #8ccaff;outline-offset:-2px}
+.dsh-preview-full-actions{position:absolute;left:16px;top:16px;z-index:10;background:#17191cb3;padding:8px;border-radius:9px;color:white}
+`;
+const buttonStyle={border:'1px solid var(--dsw-alias-border-l1,#555)',background:'var(--dsw-alias-bg-layer-1,#fff)',color:'inherit',borderRadius:8,padding:'6px 10px',cursor:'pointer',minHeight:36};
+// Shared by generation history and the Live Film library.
+export function PreviewFrame({title,label,onClose,previous,next,isImage=true,resetKey,details,actions,notice,onLoad,download,showControls=true,children}){
+ const [fullscreen,setFullscreen]=useState(false),[zoom,setZoom]=useState(false),box=useRef(null),closeRef=useRef(onClose);closeRef.current=onClose;
+ useEffect(()=>{setZoom(false)},[resetKey]);
+ useEffect(()=>{const before=document.activeElement;box.current?.focus();return()=>before?.isConnected&&before.focus()},[]);
+ useEffect(()=>{const key=e=>{if((e.key==='Escape'&&e.target.matches?.('.dsh-asset-name input'))||document.querySelector('[data-reference-picker]')||(e.key==='Escape'&&document.querySelector('[aria-label="引用已添加图片"]')))return;if(e.key==='Escape'){e.preventDefault();e.stopPropagation();if(fullscreen)setFullscreen(false);else closeRef.current()}if(e.key==='Tab'){const els=[...box.current.querySelectorAll('button:not(:disabled),a[href],video[controls],audio[controls],[tabindex="0"],input:not(:disabled),select:not(:disabled),textarea:not(:disabled)')].filter(x=>x.getClientRects().length&&!x.hidden);if(!els.length){e.preventDefault();return}const first=els[0],last=els.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===box.current)){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===box.current)){e.preventDefault();first.focus()}}};window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true)},[fullscreen]);
+ return createPortal(<div style={{position:'fixed',inset:0,zIndex:1500,background:'var(--dsw-alias-bg-mask-1,#0008)',display:'flex',alignItems:'center',justifyContent:'center'}} onMouseDown={e=>{if(e.target===e.currentTarget)closeRef.current()}}><section ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label} className={'dsh-plugin-surface dsh-history-preview'+(fullscreen?' is-fullscreen':'')}><style>{galleryCss+fitCss+compactCss+`.dsh-history-preview>header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.dsh-history-preview>header>strong{flex:1;min-width:100px}.dsh-preview-action{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.dsh-preview-action button{min-height:44px;min-width:88px}.dsh-preview-notice{padding:8px 12px;background:#305c42;color:white;border-radius:8px;z-index:7}.is-fullscreen .dsh-preview-notice{position:absolute;top:110px;right:20px}.dsh-preview-stage .dsh-image-result{position:relative}.dsh-preview-stage video{width:100%;max-height:65vh;background:#090a0c}.is-fullscreen .dsh-preview-stage video{height:100vh;max-height:100vh;object-fit:contain}.dsh-preview-stage audio{width:100%}`}</style><button className="dsh-preview-close" style={buttonStyle} aria-label="关闭生成预览" onClick={()=>closeRef.current()}>×</button>{fullscreen&&actions&&<div className="dsh-preview-full-actions dsh-preview-action">{actions}</div>}{notice&&<div className="dsh-preview-notice" role="status">{notice}</div>}<div className="dsh-preview-body"><div className={'dsh-preview-stage'+(zoom?' zoomed':'')} onLoad={onLoad}>{children({fullscreen,zoom,setFullscreen})}{showControls&&<div className="dsh-preview-controls" role="toolbar" aria-label="预览操作">{download&&<a href={download.url} download={download.name} aria-label={isImage?"下载图片":"下载视频"} title="下载原文件"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg></a>}{isImage&&<button aria-label="缩放图片" title={zoom?'适应窗口':'放大图片'} aria-pressed={zoom} onClick={()=>setZoom(!zoom)}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7.5 10.5h6"/>{!zoom&&<path d="M10.5 7.5v6"/>}</svg></button>}<button aria-label="全屏浏览" title={fullscreen?'退出全屏':'全屏浏览'} aria-pressed={fullscreen} onClick={()=>setFullscreen(!fullscreen)}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={fullscreen?'M9 3v6H3m12-6v6h6M3 15h6v6m6 0v-6h6':'M9 3H3v6m12-6h6v6M3 15v6h6m6 0h6v-6'}/></svg></button></div>}<button className="dsh-preview-nav previous" aria-label="上一条记录" title="上一张" disabled={!previous} onClick={previous}>‹</button><button className="dsh-preview-nav next" aria-label="下一条记录" title="下一张" disabled={!next} onClick={next}>›</button></div><aside className="dsh-preview-detail" aria-label="生成详情"><strong className="dsh-preview-title">{title}</strong>{!fullscreen&&actions&&<div className="dsh-preview-action">{actions}</div>}{details}</aside></div></section></div>,document.body)
+}
+function AssetDetails({asset,url,onResult}){
+ const [record,setRecord]=useState({id:null,status:'loading'});
+ useEffect(()=>{const controller=new AbortController();let alive=true;
+  async function load(){setRecord({id:asset.id,status:'loading'});const kind=asset.type.startsWith('image/')?'image':asset.type.startsWith('video/')?'video':null;if(!kind){setRecord({id:asset.id,status:'imported'});return}
+   try{const response=await fetch('/api/'+kind+'-studio/tasks',{credentials:'same-origin',signal:controller.signal});if(!response.ok)throw Error('记录读取失败');const data=await response.json();if(!Array.isArray(data.tasks))throw Error('记录格式无效');const task=data.tasks.find(t=>(t.results||[]).some(a=>a.id===asset.id));const result=task?.results.find(a=>a.id===asset.id);if(alive)setRecord({id:asset.id,status:task?'generated':'imported',task,model:task?.model,prompt:task?.prompt,time:result?.createdAt||task?.completedAt||task?.createdAt})}
+   catch(e){if(alive&&!controller.signal.aborted)setRecord({id:asset.id,status:'error'})}
+  }
+  load();return()=>{alive=false;controller.abort()}
+ },[asset.id,asset.type]);
+ const current=record.id===asset.id?record:{status:'loading'},generated=current.status==='generated',date=generated&&current.time?new Date(current.time):null;
+ return <><strong>素材详情</strong><p>{asset.type}</p><dl><dt>素材来源</dt><dd data-asset-source>{generated?'AI 生成':current.status==='imported'?'导入素材':current.status==='error'?'暂无法识别':'正在读取生成记录…'}</dd><dt>生成模型</dt><dd data-asset-model>{generated?taskModelName(current.task):'—'}</dd>{generated&&current.task.model==='midjourney'&&<dd><MidjourneyActions key={current.task.id} task={current.task} selectedAsset={asset} onResult={onResult}/></dd>}<dt>生成时间</dt><dd data-asset-time>{date&&!Number.isNaN(date.getTime())?date.toLocaleString('zh-CN'):'—'}</dd><dt>提示词</dt><dd data-asset-prompt style={{whiteSpace:'pre-wrap'}}>{generated?current.prompt||'—':'—'}</dd></dl>{current.status==='error'&&<p role="status">生成记录暂时无法读取，重新打开预览可重试。</p>}{asset.type.startsWith('image/')&&['generated','imported','error'].includes(current.status)&&<ImageEdit showActions={false} selectedAsset={asset} key={generated?current.task.id:asset.id} task={generated?current.task:{referenceIds:[asset.id]}} onResult={onResult}/>}</>
+}
+export function AssetPreview({asset,url,onClose,previous,next,actions,notice,onResult}){
+ const image=asset.type.startsWith('image/');return <PreviewFrame title={image?<AssetName key={asset.id} asset={asset}/>:asset.name} label="素材预览" download={{url,name:asset.name}} isImage={image} resetKey={asset.id} onClose={onClose} previous={previous} next={next} actions={actions} notice={notice} details={<AssetDetails asset={asset} url={url} onResult={onResult}/>}>{({fullscreen,zoom,setFullscreen})=><div className="dsh-image-result" key={asset.id}>{image?<PanImage image={{...asset,previewUrl:url}} prompt={asset.name} zoomed={zoom} fullscreen={fullscreen}/>:asset.type.startsWith('video/')?<video src={url} controls playsInline preload="metadata"/>:<audio src={url} controls preload="metadata"/>}</div>}</PreviewFrame>
+}
+
+export function ImageComposer({onClose,onResult}){
+ const [job,setJob]=useState(null),[result,setResult]=useState(null),seed=useRef({referenceIds:[]});
+ useEffect(()=>{if(job?.status==='completed'&&job.results?.[0]){setResult(job.results[0]);onResult?.(job.results[0])}},[job?.status,job?.id]);
+ return <PreviewFrame label="AI生成图片" title={result?<AssetName key={result.id} asset={result}/>:"AI生成图片"} onClose={onClose} showControls={!!result} resetKey={result?.id} download={result?{url:'/api/image-studio/image?id='+encodeURIComponent(result.id),name:result.name||'generated.png'}:null} details={<ImageEdit task={seed.current} defaultOpen onJob={setJob} onResult={setResult}/>}>
+ {({fullscreen,zoom})=>result?<PanImage image={result} prompt="生成图片预览" zoomed={zoom} fullscreen={fullscreen}/>:<div style={{height:'100%',minHeight:240,display:'flex',alignItems:'center',justifyContent:'center',background:'#8882',borderRadius:10}}>{job&&['submitting','polling'].includes(job.status)?<PixelPreview createdAt={job.createdAt}/>:<span style={{opacity:.5}}>生成的图片将在这里显示</span>}</div>}
+ </PreviewFrame>
+}

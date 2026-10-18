@@ -1,0 +1,41 @@
+{
+  "name": "dsh-media-gallery",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DeepSeek Harness 媒体画廊：让 agent 生成的图片与视频在 Web 聊天界面直接显示，图片可点击全屏放大，视频可内嵌播放。宿主侧提供 media_show 工具与支持 Range 的分块流式取流路由，浏览器侧注册 media_show 专属的 tool.call.toolview 卡片。零依赖纯 ESM。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "media",
+    "image",
+    "video",
+    "gallery"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2"
+  }
+}
