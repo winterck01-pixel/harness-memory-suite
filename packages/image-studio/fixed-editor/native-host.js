@@ -7,7 +7,7 @@ import {nativeParameterSchema,normalizeNativeDraft} from './native-schema.js';
 import {createServerAssembly} from './server-assembly.js';
 function hasTrustedBrowserOrigin(req){const origin=req.headers.get('origin'),host=req.headers.get('host');if(!origin||!host)return false;try{return new URL(origin).host===new URL('http://'+host).host}catch{return false}}
 export function nativeEditorModelName(spec,id){return spec.name||spec.displayName||spec.label||id;}
-export async function createNativeImageStudioEditor({studioDir,rootDir,engine,submit,uiOrigin,config,references,saveResult,costs,authorize,workerScript,workerEnv,nativeOperations={}}){
+export async function createNativeImageStudioEditor({studioDir,rootDir,engine,submit,uiOrigin,config,references,saveResult,costs,getCredentialBinding,authorize,workerScript,workerEnv,nativeOperations={}}){
  const registry=await import(pathToFileURL(join(studioDir,'model-registry.js')).href);
  const selection=await import(pathToFileURL(join(studioDir,'model-selection.js')).href);
  const parameters=await import(pathToFileURL(join(studioDir,'image-parameters.js')).href);
@@ -23,7 +23,7 @@ export async function createNativeImageStudioEditor({studioDir,rootDir,engine,su
  };
  const modelRuntime={...registry,...parameters,resolveSelectedModel:selection.resolveSelectedModel,normalizeDraft:request=>parameters.normalizeImageMcpDraft?parameters.normalizeImageMcpDraft(normalizeNativeDraft(request,registry.modelSpec(request.model)),registry.modelSpec(request.model)):normalizeNativeDraft(request,registry.modelSpec(request.model))};
  const getModels=async()=>{const c=await config();const selected=selection.modelSelection(c);return selected.enabledModels.map(id=>{const s=registry.modelSpec(id);return{...structuredClone(s),name:nativeEditorModelName(s,id),ratios:parameters.ratiosFor(id),quality:s.fields?.quality?.values||['auto'],n:s.fields?.n?.values||[1],supportsReference:(s.maxRefs??16)>0,parameterSchema:nativeParameterSchema(s)};});};
- assembly=createServerAssembly({rootDir,authorize,uiOrigin,nativeOperations,nativeAssets:references,readNativeAsset:async id=>{const asset=(await references()).find(a=>a.id===id);if(!asset)throw Error('原素材不存在');return {bytes:await readFile(asset.path),name:asset.name};},resourcePolicyOverrides:{codecProfile:'sharp-0.34.5'},engine:nativeEngine,modelRuntime,config,getModels,costPreview:async request=>costs.preview(await importReferences(request)),workerScript,workerEnv:workerEnv||{...process.env,DSH_SHARP_MODULE:sharpPackage}});
+ assembly=createServerAssembly({rootDir,authorize,uiOrigin,nativeOperations,nativeAssets:references,readNativeAsset:async id=>{const asset=(await references()).find(a=>a.id===id);if(!asset)throw Error('原素材不存在');return {bytes:await readFile(asset.path),name:asset.name};},resourcePolicyOverrides:{codecProfile:'sharp-0.34.5'},engine:nativeEngine,modelRuntime,config,getCredentialBinding,getModels,costPreview:async request=>costs.preview(await importReferences(request)),workerScript,workerEnv:workerEnv||{...process.env,DSH_SHARP_MODULE:sharpPackage}});
  await assembly.ready;
  return{...assembly,modelRuntime,getModels,costPreview:request=>costs.preview(request),
   // Only call through existing ctx authenticated connection. The caller retains disposal with ctx.effect.

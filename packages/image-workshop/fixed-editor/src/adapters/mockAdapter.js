@@ -438,11 +438,8 @@ export function createMockAdapter({ latency = true, persist = true, taskDuration
         const h = asset.height * scale;
         rect = { x: (canvas.width - w) / 2, y: (canvas.height - h) / 2, width: w, height: h };
       }
-      // 等比铺满落点（contain）：保持素材比例，落在已固定 rect 内
-      const scale = Math.min(rect.width / asset.width, rect.height / asset.height);
-      const w = asset.width * scale;
-      const h = asset.height * scale;
-      const matrix = [scale, 0, 0, scale, rect.x + (rect.width - w) / 2, rect.y + (rect.height - h) / 2];
+      // Match the native adapter: display at frozen canvas pixels, independent of output resolution.
+      const matrix = [rect.width/asset.width,0,0,rect.height/asset.height,rect.x,rect.y];
       const layerId = uuid();
       const layer = {
         id: layerId, kind: 'image', assetId: asset.id, name: `生成图层 ${now().toString(36).slice(-4)}`,

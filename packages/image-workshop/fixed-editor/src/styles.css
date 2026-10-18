@@ -450,3 +450,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .iw-reference-pickbar small { color:var(--iw-text-dim); font-size:11px; }
 .iw-reference-pickbar > div { display:flex; gap:8px; }
 .iw-layer-item.is-reference-selected { background:var(--iw-accent-soft); border-color:var(--iw-accent); }
+
+/* Pending/result overlays use frozen canvas coordinates; controls cancel viewport scale. */
+.iw-generation-frame{position:absolute;box-sizing:border-box;border:1px dashed #609eff;background:#4d86e522;z-index:3;cursor:pointer;overflow:visible}
+.iw-generation-frame-content{transform-origin:top left;overflow:hidden;position:absolute;inset:0;pointer-events:none}
+.iw-generation-frame-content>img{width:100%;height:100%;object-fit:fill}
+.iw-generation-state{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#192337a0;color:#dceaff;padding:6px;text-align:center;overflow:hidden}
+.iw-generation-state small{overflow:hidden;max-width:100%;text-overflow:ellipsis;font-size:11px}
+.iw-generated-layer-actions{position:absolute;pointer-events:none;z-index:7}
+.iw-canvas-regenerate{position:absolute;right:0;top:0;pointer-events:auto;white-space:nowrap;max-width:none;background:#1b3565dd;border-color:#6aa5ff;color:white;z-index:8}

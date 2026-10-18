@@ -22,7 +22,7 @@
     "test:compat": "node --test scripts/host-compat.test.mjs scripts/media-config.test.mjs",
     "build:media": "npm run build --workspace=dsh-image-studio && npm run build --workspace=dsh-video-studio && npm run build --workspace=dsh-image-workshop && npm run build --workspace=dsh-live-film",
     "test:media": "node --test packages/image-studio/*.test.mjs packages/image-studio/fixed-editor/tests/*.test.mjs packages/video-studio/*.test.mjs packages/live-film/tests/*.test.mjs packages/image-workshop/tests/*.test.mjs packages/dsh-remote-links/*.test.mjs packages/dsh-launchpad/*.test.mjs packages/file-manager/media-operations.test.mjs",
-    "test:media-layout": "node --test packages/image-workshop/tests/workspace-layout.browser.mjs"
+    "test:media-layout": "node --test packages/image-workshop/tests/*.browser.mjs"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.5",

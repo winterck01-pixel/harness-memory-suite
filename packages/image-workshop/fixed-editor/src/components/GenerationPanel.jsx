@@ -150,6 +150,7 @@ export function GenerationPanel({ targetRectMode, setTargetRectMode, referenceDr
       </section>
 
       <section className="iw-gen-section">
+        {selectedModels.length > 0 && <small>生成分辨率由模型支持的档位决定；画布中的展示大小使用框选区域的像素尺寸。</small>}
         {selectedModels.length > 0 && <h3>模型参数</h3>}
         {state.modelsLoading && <p role="status">正在读取模型能力…</p>}
         {state.modelsError && <p role="alert">{state.modelsError}</p>}
@@ -159,7 +160,7 @@ export function GenerationPanel({ targetRectMode, setTargetRectMode, referenceDr
             const checked = selectedModels.includes(m.id);
             const p = params[m.id] || {};
             return (
-              <details key={m.id} className="iw-model-settings">
+              <details key={m.id} open className="iw-model-settings">
                 <summary>{m.name || m.id} <span>参数</span></summary>
                 {checked && (
                   <div className="iw-model-params">
@@ -170,10 +171,10 @@ export function GenerationPanel({ targetRectMode, setTargetRectMode, referenceDr
                       </select>
                     </label>
                     {m.sizes?.length > 0 && (
-                      <label>清晰度
+                      <label>生成分辨率
                         <select value={p.resolution || m.sizes[0]} onChange={(e) => setParam(m.id, 'resolution', e.target.value)}
                           aria-label={`${m.id} 清晰度`}>
-                          {m.sizes.map((s) => <option key={s} value={s}>{s}</option>)}
+                          {m.sizes.map((s) => <option key={s} value={s}>{m.workrally?.resolutionOptions?.find(o=>String(o.value)===String(s))?.label || s}</option>)}
                         </select>
                       </label>
                     )}

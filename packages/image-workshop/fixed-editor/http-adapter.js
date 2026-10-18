@@ -33,10 +33,11 @@ export function createHttpEditorAdapter({baseUrl='/api/image-studio',fetchImpl=g
   exportLayer:body=>request('/export/layer',{method:'POST',body,binary:true}),
   exportComposite:canvasId=>request('/export/composite',{method:'POST',body:{canvasId},binary:true}),
   submitGeneration:body=>request('/editor/batches',{method:'POST',body}),
+  regenerate:(id,body)=>request(`/editor/batches/${path(id)}/regenerate`,{method:'POST',body}),
   getTask:id=>request(`/editor/tasks/${path(id)}`),
   cancelTask:id=>request(`/editor/tasks/${path(id)}/cancel`,{method:'POST',body:{}}),
   listBatches:canvasId=>request('/editor/batches'+(canvasId?'?canvasId='+path(canvasId):'')),
   getBatch:id=>request(`/editor/batches/${path(id)}`),
-  applyCandidate:(batchId,candidateId,options={})=>request(`/editor/batches/${path(batchId)}/apply`,{method:'POST',body:{candidateId,...(options.layout?{layout:options.layout}:{})}}),
+  applyCandidate:(batchId,candidateId,options={})=>request(`/editor/batches/${path(batchId)}/apply`,{method:'POST',body:{candidateId,...(options.layout?{layout:options.layout}:{}),...(options.expectedRevision!==undefined?{expectedRevision:options.expectedRevision}:{})}}),
  };
 }

@@ -1,3 +1,4 @@
+import {CanvasGeneration} from './CanvasGeneration.jsx';
 // 有限白底画布舞台：空间选择/多选/拖动/缩放（边界内）、框选、落点框选、视口缩放/平移。
 // 像素坐标系：画布元素按 zoom 缩放显示，图层矩阵始终为画布坐标（缩放只改变视图）。
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -254,6 +255,7 @@ export function CanvasStage({ targetRectMode, onTargetRectDone, referencePick })
                 }} />
             );
           })}
+          <CanvasGeneration store={store} state={state} layers={displayLayers} disabled={targetRectMode||referencePick?.active} />
           {/* 每图层选中轮廓 */}
           {displayLayers.filter((l) => l.visible && !referencePick?.active && state.selection.includes(l.id)).map((layer) => {
             const asset = state.assets.find((a) => a.id === layer.assetId);

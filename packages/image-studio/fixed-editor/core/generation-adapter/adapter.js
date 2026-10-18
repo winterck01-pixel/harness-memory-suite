@@ -65,6 +65,7 @@ export function createGenerationAdapter({ engine, config, assets, modelRuntime, 
       const submitted = [];
       const persistBatch = async () => saveAll((await load()).map(b => b.id === batch.id ? batch : b));
       batch.models = [...new Set(targets)];
+      batch.requestsByModel = structuredClone(requestsByModel); // Freeze even failed model requests for exact explicit replay.
       batch.modelStatus = Object.fromEntries(batch.models.map(model => [model, { status: 'not_submitted', requestId: newId() }]));
       batch.state = 'submitting';
       await persistBatch(); // 不确定的进程中断不得自动重提已发生的付费请求。
@@ -86,7 +87,7 @@ export function createGenerationAdapter({ engine, config, assets, modelRuntime, 
           batch.taskIds.push(task.id);
           submitted.push({ model, taskId: task.id });
         } catch (error) {
-          batch.modelStatus[model] = { ...cap, status: engineAttempted ? 'uncertain' : 'failed', requestId, note: error.message || String(error) };
+          batch.modelStatus[model] = { ...batch.modelStatus[model], ...cap, status: engineAttempted ? 'uncertain' : 'failed', requestId, note: error.message || String(error) };
         }
         await persistBatch();
       }
