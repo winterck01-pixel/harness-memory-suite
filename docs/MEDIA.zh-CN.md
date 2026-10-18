@@ -45,6 +45,9 @@ Agent 通过工坊工具或生成工具传入相同参数：可灵使用 `extra.
 ```sh
 DSH_REQUIRE_NODE_PTC_TESTS=1 npm run test:media
 npm run verify
+# 浏览器布局回归需要安装测试浏览器
+npm exec playwright install chromium
+npm run test:media-layout
 ```
 
 测试使用合成账号、模拟工具和隔离素材，不提交真实付费生成。授权测试在隔离目录中使用临时回调端口，不占用用户的授权端口。通过模拟表示调用和交互契约通过，不等于真实服务的画质、计费或所有下游限制均已验证。

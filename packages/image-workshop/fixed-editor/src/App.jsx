@@ -88,10 +88,10 @@ export function App({ GenerationPanelComponent = GenerationPanel }) {
               <button type="button" data-testid="export-composite" onClick={() => store.exportComposite()} title="导出当前可见图层的合成图">
                 <ExportIcon size={15} /> 导出可见合成
               </button>
-              <button type="button" onClick={() => store.closeProject()} title="返回项目列表"
-                data-testid="back-to-projects">项目</button>
             </>
           )}
+          {state.project && <button type="button" onClick={() => store.closeProject()} aria-label="返回项目列表" title="保存当前项目并返回项目列表"
+            data-testid="back-to-projects">← 返回项目列表</button>}
         </div>
       </header>
 

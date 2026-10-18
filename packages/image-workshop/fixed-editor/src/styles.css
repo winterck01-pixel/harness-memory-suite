@@ -36,15 +36,15 @@ body {
 /* ---- 顶栏 ---- */
 .iw-topbar {
   display: flex; align-items: center; gap: 16px;
-  height: 44px; padding: 0 12px; flex: none;
+  min-height: 44px; padding: 6px 12px; flex: none; flex-wrap: wrap;
   background: var(--iw-bg-panel); border-bottom: 1px solid var(--iw-border);
 }
 .iw-brand { display: flex; align-items: baseline; gap: 8px; }
 .iw-brand strong { font-size: 14px; }
 .iw-brand small { color: var(--iw-text-dim); }
-.iw-project-name { color: var(--iw-text-dim); }
+.iw-project-name { color: var(--iw-text-dim); min-width: 0; flex: 1 1 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iw-project-name::before { content: "· "; }
-.iw-topbar-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.iw-topbar-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
 button {
   font: inherit; color: var(--iw-text);
