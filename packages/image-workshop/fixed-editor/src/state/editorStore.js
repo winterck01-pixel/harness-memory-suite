@@ -57,6 +57,7 @@ export class EditorStore {
     this.modelsLoading = false;
     this.modelsError = '';
     this.modelsLoadEpoch = 0;
+    this.canvasLoadEpoch = 0;
     this.modelsChangeListener = null;
     this.savePromise = null;
     this.appliedCandidates = new Set();
@@ -173,6 +174,7 @@ export class EditorStore {
   dispose() {
     this.disposed = true;
     this.modelsLoadEpoch++;
+    this.canvasLoadEpoch++;
     if (this.modelsChangeListener) globalThis.window?.removeEventListener?.('dsh-image-models-changed', this.modelsChangeListener);
     this.modelsChangeListener = null;
     this.stopAgentChanges?.();
@@ -228,6 +230,7 @@ export class EditorStore {
       if (this.saveTimer) { clearTimeout(this.saveTimer); this.saveTimer = null; }
       if (await this.save() === false) return false;
     }
+    this.canvasLoadEpoch++;
     this.activeProjectId = null;
     this.activeCanvasId = null;
     this.selection.clear();
@@ -326,6 +329,7 @@ export class EditorStore {
         this.activateCanvas(nextId);
         await this.loadCanvasFull(nextId);
       } else {
+        this.canvasLoadEpoch++;
         this.activeCanvasId = null;
         this.activeProjectId = null;
         this.selection.clear();
@@ -337,8 +341,23 @@ export class EditorStore {
   }
 
   async loadCanvasFull(canvasId, { canReplace = () => true } = {}) {
+    const epoch = ++this.canvasLoadEpoch;
+    const current = () => epoch === this.canvasLoadEpoch && this.activeCanvasId === canvasId && !this.disposed;
+    const clean = () => !this.pendingCommands.length && !this.savePromise && !this.externalConflict;
+    // Only the current canvas's editable content matters. Other canvases may
+    // legitimately publish candidate assets while this canvas is loading.
+    const captureContent = () => {
+      const original = this.doc.canvases[canvasId], revision = this.lastServerRevision;
+      const ids = [...(original?.layerIds || [])], layers = ids.map(id => this.doc.layers[id]);
+      return () => this.doc.canvases[canvasId] === original && this.lastServerRevision === revision
+        && (this.doc.canvases[canvasId]?.layerIds || []).length === ids.length
+        && ids.every((id, i) => this.doc.canvases[canvasId].layerIds[i] === id && this.doc.layers[id] === layers[i]);
+    };
+    const sourceUnchanged = captureContent();
     const { canvas, layers, assets } = await this.adapter.getCanvas(canvasId);
-    if (this.activeCanvasId !== canvasId || this.disposed || !canReplace()) return false;
+    // Canvas identity alone cannot distinguish A -> B -> A, nor two reads of A.
+    // Never replace a newer read or an edit made while this read was in flight.
+    if (!current() || !clean() || !sourceUnchanged() || !canReplace()) return false;
     const nextLayers = { ...this.doc.layers };
     for (const l of layers) nextLayers[l.id] = l;
     const nextAssets = { ...this.doc.assets };
@@ -354,9 +373,10 @@ export class EditorStore {
     this.selection.clear();
     this.saveState = 'idle';
     this.emit();
+    const loadedUnchanged = captureContent();
     try {
       const { batches } = await this.adapter.listBatches(canvasId);
-      if (this.activeCanvasId !== canvasId || this.disposed) return;
+      if (!current() || !clean() || !loadedUnchanged()) return false;
       for (const item of batches) {
         const batch = item.batch || item;
         if (batch.canvasId !== canvasId) continue;
@@ -368,11 +388,12 @@ export class EditorStore {
       }
       this.activeBatchId = [...this.batches.entries()].reverse().find(([,r]) => r.batch.canvasId === canvasId)?.[0] || null;
       this.emit();
-    } catch (e) { this.setNotice(`生成记录恢复失败：${e.message || e}`, 'error'); }
+    } catch (e) { if (!current()) return false; this.setNotice(`生成记录恢复失败：${e.message || e}`, 'error'); }
     return true;
   }
 
   activateCanvas(canvasId) {
+    this.canvasLoadEpoch++;
     this.activeCanvasId = canvasId;
     this.activeProjectId = this.doc.canvases[canvasId]?.projectId || this.activeProjectId;
     this.selection.clear();
