@@ -27,17 +27,19 @@ function projection(e,t){
  }
  return row;
 }
-function chunks(events){const result=[];let active=null;for(const e of events){if(e.type==='turn/start'){active={turn:e.data?.turn,events:[]};result.push(active)}if(active)active.events.push(e)}return result}
+// Only a positively identified next-turn queue operation is administrative.
+// Late tool results remain evidence: silently dropping those would hide changes.
+function chunks(events){const result=[];let active=null,ended=false;for(const e of events){if(e.type==='turn/start'){active={turn:e.data?.turn,events:[],bookkeeping:[]};ended=false;result.push(active)}if(active){if(ended&&e.type==='agent/inbox/spliced'&&e.data?.target==='next-turn')active.bookkeeping.push(e);else active.events.push(e);if(e.type==='turn/end')ended=true}}return result}
 /** Evidence-only single-writer consumer. Native event text never enters this ledger.
  * Callers supply trusted origin/session resolvers and share the host writer lease.
  * Review records authorize frozen sandbox consideration only, never production use.
  */
 export class ExecutionExperienceCapture{
- #canWrite; #resolveOrigin; #resolveSession; #queue=Promise.resolve(); #validated=new Set(); #epoch=0;
- constructor({directory,enabled=false,contractFingerprint=null,maxEvents=10000,maxSources=64,maxTotalEvents=10000,maxCandidates=1000,maxBytes=8388608,canWrite=()=>true,resolveOrigin=()=>null,resolveSession=null}={}){
+ #canWrite; #resolveOrigin; #resolveSession; #currentSession; #queue=Promise.resolve(); #validated=new Set(); #epoch=0; #pending=0;
+ constructor({directory,enabled=false,contractFingerprint=null,maxEvents=10000,maxSources=64,maxTotalEvents=10000,maxCandidates=1000,maxBytes=8388608,canWrite=()=>true,resolveOrigin=()=>null,resolveSession=null,currentSession=null}={}){
   this.directory=directory;this.enabled=enabled===true;this.contractFingerprint=contractFingerprint;
   for(const [key,value]of Object.entries({maxEvents,maxSources,maxTotalEvents,maxCandidates,maxBytes})){if(!Number.isSafeInteger(value)||value<1)throw TypeError(`Invalid ${key}`);this[key]=value}
-  this.#canWrite=canWrite;this.#resolveOrigin=resolveOrigin;this.#resolveSession=resolveSession;this.lastError=null;
+  this.#canWrite=canWrite;this.#resolveOrigin=resolveOrigin;this.#resolveSession=resolveSession;this.#currentSession=currentSession??resolveSession;this.lastError=null;
   this.path=directory?join(directory,'execution-experience.json'):null;
   this.state={schemaVersion:1,mode:'review-only',sources:{},candidates:{}};
   if(this.enabled&&this.path&&existsSync(this.path)){
@@ -70,7 +72,19 @@ export class ExecutionExperienceCapture{
  sourceReference(id,{scope}={}){const c=this.inspect(id,{scope});if(!c)return null;const s=this.state.sources[c.sourceKey],t=s.turns[c.turnHash];return {sessionId:s.sessionId,turn:t.turn,startSeq:c.evidenceRefs[0]?.seq,endSeq:c.evidenceRefs.at(-1)?.seq}}
  sourceSessions({scope}={}){return [...new Set(Object.values(this.state.sources).filter(s=>s.scope===scope&&s.status!=='withdrawn').map(s=>s.sessionId))]}
  idle(){return this.#queue.catch(()=>{})}
- _serial(fn){const operation=this.#queue.catch(()=>{}).then(fn);this.#queue=operation.catch(()=>{});return operation}
+ hasPendingWork(){return this.#pending>0}
+ isCandidateCurrent(id,{scope}={}){
+  const c=this.inspect(id,{scope});if(!c||c.sourceValidation!=='verified'||this.#pending)return false;
+  try{
+   const s=this.state.sources[c.sourceKey],session=this.#currentSession?.(s.sessionId);
+   if(!session||session.then||session.id!==s.sessionId||hash(session.header?.cwd)!==s.cwdHash||c.contractFingerprint!==this.contractFingerprint)return false;
+   const stream=session.snapshotEvents(c.evidenceRefs[0].seq,Math.min(session.seq,c.evidenceRefs[0].seq+this.maxEvents+1));
+   if(!Array.isArray(stream))return false;
+   const events=chunks(stream)[0]?.events;
+   return !!events&&events.length===c.evidenceRefs.length&&events.every((e,i)=>e.seq===c.evidenceRefs[i].seq&&hash(e)===c.evidenceRefs[i].eventHash);
+  }catch{return false}
+ }
+ _serial(fn){this.#pending++;const operation=this.#queue.catch(()=>{}).then(fn).finally(()=>{this.#pending--});this.#queue=operation.catch(()=>{});return operation}
  capture(session,options={}){return this._serial(()=>this._capture(session,options))}
  revalidate(session,options={}){return this.capture(session,options)}
  async _origin(session,events,scope){try{const o=await this.#resolveOrigin(session,events,scope);if(o?.status!=='verified'||!['schedule','user'].includes(o.kind)||!record(o.binding)||canonical(o.binding).length>32768)return {status:o?.optOut?'denied':o?.status??'unknown',reason:o?.reason??null,optOut:o?.optOut===true};return {status:'verified',kind:o.kind,bindingHash:hash(o.binding),taskHashes:safeHashes((o.binding.tasks??[]).map(t=>t.taskHash)),taskPromptHashes:safeHashes((o.binding.tasks??[]).map(t=>t.promptHash)),optOut:o.optOut===true}}catch{return {status:'unavailable',reason:'resolver-unavailable'}}}
@@ -85,8 +99,27 @@ export class ExecutionExperienceCapture{
   if(!prior&&Object.keys(this.state.sources).length>=this.maxSources)return {status:'quota-paused',reason:'max-sources'};
   const next=this.snapshot(),s=next.sources[key]??{sessionId:String(session.id),scope,scopeHash:hash(scope),cwdHash:hash(session.header.cwd),baseline,cursor:baseline-1,rows:{},turns:{},excludedTurns:[],contractFingerprint:this.contractFingerprint,status:'pending'};
   next.sources[key]=s;
-  if(s.cwdHash!==hash(session.header.cwd)||s.contractFingerprint!==this.contractFingerprint){const reason=s.cwdHash!==hash(session.header.cwd)?'scope-changed':'contract-changed';this._invalidate(next,key,reason);s.status=reason;const failure=this._save(next,epoch);return failure??{status:reason}}
+  if(s.cwdHash!==hash(session.header.cwd)){this._invalidate(next,key,'scope-changed');s.status='scope-changed';return this._save(next,epoch)??{status:'scope-changed'}}
+  if(s.contractFingerprint!==this.contractFingerprint){
+   this._invalidate(next,key,'contract-changed');
+   // Never relabel old native evidence with a new contract. Wait for a fresh
+   // turn after observing the cutover, then resume this source going forward.
+   Object.assign(s,{contractFingerprint:this.contractFingerprint,rows:{},turns:{},baseline:session.seq,cursor:session.seq-1,awaitingTurnBoundary:true,status:'contract-changed'});
+   return this._save(next,epoch)??{status:'contract-changed'};
+  }
+  if(s.awaitingTurnBoundary){
+   const fresh=groups.find(g=>g.events[0].seq>=s.baseline);
+   if(!fresh)return {status:'waiting-new-contract-turn'};
+   s.baseline=fresh.events[0].seq;s.cursor=s.baseline-1;delete s.awaitingTurnBoundary;
+  }
   if(session.seq<=s.cursor){this._invalidate(next,key,'source-sequence-regression');s.status='conflict';return this._save(next,epoch)??{status:'conflict'}}
+  // Keep a neutral hash row for stream continuity without attaching queue
+  // bookkeeping to a completed episode. This also normalizes older ledgers.
+  for(const event of groups.filter(g=>g.events[0].seq>=baseline).flatMap(g=>g.bookkeeping)){
+   const previous=s.rows[event.seq];if(previous&&previous.eventHash!==hash(event)&&previous.type!=='excluded'){s.status='conflict';this._invalidate(next,key,'source-payload-conflict');return this._save(next,epoch)??{status:'conflict'}}
+   if(!previous&&(Object.keys(s.rows).length>=this.maxEvents||Object.values(next.sources).reduce((n,x)=>n+Object.keys(x.rows).length,0)>=this.maxTotalEvents))return {status:'quota-paused',reason:'max-events'};
+   s.rows[event.seq]={seq:event.seq,type:'bookkeeping',eventHash:hash(event),turnHash:null};
+  }
   let added=0,blocked=false,untrusted=false,originChanged=false,conflict=false;const verifiedTurns=new Set();
   let streamBlocked=groups[0].events[0].seq>baseline?s.blockedContinuation===true:false;
   const total=()=>Object.values(next.sources).reduce((n,x)=>n+Object.keys(x.rows).length,0);
@@ -148,6 +181,17 @@ export class ExecutionExperienceCapture{
   return {checked:results.length,verified:results.filter(x=>x.status==='verified').length,invalidated:results.filter(x=>x.status!=='verified').length,retriedSources:retryResults.length,retryResults,results};
  })}
  validateCandidate(id,{scope}={}){return this._serial(()=>this._validateCandidate(id,{scope}))}
+ // Host-only evidence access for registered validators. Not exposed through an
+ // agent tool; raw native data must never be stored as reusable instruction.
+ readValidatedEvidence(id,{scope}={}){return this._serial(async()=>{
+  const check=await this._validateCandidate(id,{scope});if(check.status!=='verified')return check;
+  const c=this.inspect(id,{scope}),s=this.state.sources[c.sourceKey];
+  let session;try{session=await this.#resolveSession?.(s.sessionId)}catch{return {status:'source-unavailable'}}
+  if(!session||session.id!==s.sessionId)return {status:'source-unavailable'};
+  const refs=c.evidenceRefs,events=await session.snapshotEvents(refs[0].seq,refs.at(-1).seq+1);
+  if(!Array.isArray(events)||events.length!==refs.length||events.some((e,i)=>e.seq!==refs[i].seq||hash(e)!==refs[i].eventHash))return {status:'source-conflict'};
+  return {status:'verified',candidate:c,events:copy(events)};
+ })}
  async _validateCandidate(id,{scope}={}){
   const c=this.inspect(id,{scope});if(!c)return {status:'not-found'};
   const s=this.state.sources[c.sourceKey];let session=null;try{session=typeof this.#resolveSession==='function'?await this.#resolveSession(s.sessionId):null}catch{}
@@ -158,7 +202,7 @@ export class ExecutionExperienceCapture{
   else{
    const refs=c.evidenceRefs,min=refs[0]?.seq,max=refs.at(-1)?.seq;
    const stream=await session.snapshotEvents(min,Math.min(session.seq,min+this.maxEvents+1));
-   const nextTurn=Array.isArray(stream)?stream.findIndex((e,i)=>i>0&&e.type==='turn/start'):-1;const events=nextTurn<0?stream:stream.slice(0,nextTurn);
+   const events=Array.isArray(stream)?chunks(stream)[0]?.events:null;
    if(!Array.isArray(events)||events.length!==refs.length||events.some((e,i)=>e.seq!==refs[i].seq||hash(e)!==refs[i].eventHash))reason='source-conflict';
    else{const origin=await this._origin(session,events,scope);if(origin.status!=='verified')reason=['withdrawn','denied'].includes(origin.status)?'origin-withdrawn':'origin-unavailable';else if(origin.optOut===true)reason='capture-disabled-for-turn';else if(origin.bindingHash!==c.origin.bindingHash||origin.kind!==c.origin.kind)reason='origin-changed';else if(events.some(e=>e.type==='user/message'&&['user','schedule'].includes(e.data?.source?.kind)&&selectCaptureText(text(e)).hasOptOut))reason='capture-disabled-for-turn'}
   }

@@ -38,3 +38,14 @@ remote-connections.json
 
 # Private execution evidence and human review receipts
 execution-experience.json
+auto-experience.json
+daily-experience.json
+successful-experiences.json
+auto-learning-policy.json
+runtime-state.json
+execution-experience.json.*.tmp
+auto-experience.json.*.tmp
+daily-experience.json.*.tmp
+successful-experiences.json.*.tmp
+auto-learning-policy.json.*.tmp
+runtime-state.json.*.tmp

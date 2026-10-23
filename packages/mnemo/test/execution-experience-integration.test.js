@@ -82,3 +82,15 @@ test('warm source survives a schedule change before the native schedule message 
  assert.deepEqual(f.api.engine.safety,safety)
  assert.equal(f.api.engine.staging.pending.filter(row=>row.scope===scope).length,0)
 })
+
+test('completed native execution automatically enters the uncertainty queue without asking the user or writing long-term memory',async t=>{
+ const f=await host(t),scope=projectScope(f.session.header.cwd)
+ f.api.engine.safety.frozen=true;f.api.engine.checkpoint()
+ const before=readFileSync(f.api.engine.log.path,'utf8')
+ await f.scheduled();await f.api.autoLearning.idle()
+ const status=JSON.parse(await f.call({action:'learning_status'}))
+ assert.equal(status.frozen,true);assert.equal(status.policyConfigured,false)
+ assert.equal(status.entries.length,1);assert.equal(status.entries[0].reason,'unregistered-mechanism')
+ assert.equal(status.trials,0);assert.equal(f.asks,0)
+ assert.equal(readFileSync(f.api.engine.log.path,'utf8'),before)
+})

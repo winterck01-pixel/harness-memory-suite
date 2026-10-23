@@ -2,9 +2,9 @@
 
 一套面向兼容 DeepSeek Harness 宿主的记忆、知识、技能与工具编排插件。它把“保留什么经验”“当前任务能读取什么”“何时加载技能和工具”“怎样确认经验确实被采用”连接到同一条任务流程中。
 
-当前适配 **DeepSeek Harness 0.2.1-rc.2**，适合在隔离宿主上部署和验证。仓库包含 **8 个插件模块、宿主兼容补丁、合成测试与接入脚本**。运行它需要已有的兼容宿主；本仓库没有独立的 Web 服务启动器，也不包含宿主发行版、模型账号或业务数据。
+当前适配 **DeepSeek Harness 0.2.1-rc.2**，适合在隔离宿主上部署和验证。仓库包含 **8 个核心插件模块、可选媒体扩展、宿主兼容补丁、合成测试与接入脚本**。运行它需要已有的兼容宿主；本仓库没有独立的 Web 服务启动器，也不包含宿主发行版、模型账号或业务数据。
 
-更新：适配 Harness RC2，更新工具契约与前向维护流程，并验证任务执行、状态更新及跨会话记忆复用。
+更新：补齐条件化成功经验与来源复核，完善受限验证、测试和中文使用说明。
 
 ## 导航
 
@@ -23,9 +23,17 @@
 
 本项目的经验学习设计、论文与数学模型借鉴已单独公开，见[研究导航](docs/research/README.md)、[22 项原始文献与适用限制](docs/research/REFERENCES.zh-CN.md)及[完整框架方案](docs/research/EXPERIENCE-LEARNING-DESIGN.zh-CN.md)。这些是可检验的工程设计，不表示复现了全部论文，也不涉及底层模型权重训练。
 
-首个[工具激活时序实验](docs/research/ACTIVATION-TIMING-PILOT.zh-CN.md)跑通了采集、条件候选、人工审核和冻结对照。原冻结批存在包装器失败，事后修复诊断与原结果分账；小样本信号不能推广为生产收益。生产影子接入和运行验收以[状态记录](docs/research/STATUS.zh-CN.md)为准，自动行动注入、自动晋级和技能自动注册仍关闭。
+首个[工具激活时序实验](docs/research/ACTIVATION-TIMING-PILOT.zh-CN.md)跑通了采集、条件候选、人工审核和冻结对照。原冻结批存在包装器失败，事后修复诊断与原结果分账；小样本信号不能推广为生产收益。实现与历史验收以[状态记录](docs/research/STATUS.zh-CN.md)为准，旧候选的冻结批准不会变成正常任务使用许可。
 
-新增可选的[执行经验候选链路](docs/EXECUTION-EXPERIENCE.zh-CN.md)：可信定时回执与原生工具事件可形成有来源、适用条件的待审候选，支持重启、回执延迟补采和真人冻结沙箱审查。失败正文不进入长期记忆；普通检索、自动规则提炼和生产晋级仍未接通，专用事实写入与经验候选分别验收。
+可选的[执行经验候选链路](docs/EXECUTION-EXPERIENCE.zh-CN.md)从可信定时回执与原生工具事件生成带来源、条件的待审候选，支持持久化来源复核、重启去重和延迟补采。失败正文不进入长期记忆。其上有三个独立通道：
+
+|通道|提供什么|启用与边界|
+|---|---|---|
+|[`autoLearning`](docs/auto-experience-learning.zh-CN.md)|机制模板、配对评测、预算和结果账本|依赖执行采集；省略 `enabled` 时随其构造，缺少可信策略不会运行评测。旧统计冻结禁止该通道向正式任务注入；工具激活评测始终仅限沙箱|
+|[`dailyLearning`](docs/daily-experience.zh-CN.md)|工具失败后的恢复计划、已登记激活时序机制的受限提示|须显式启用；独立本地契约验证，不调用模型；默认有效期一天。它不解除旧冻结或改写普通记忆|
+|[`successfulExperiences`](docs/SUCCESSFUL-EXPERIENCES.zh-CN.md)|成功方法的检索线索、条件、步骤、限制及真实动作/检查来源|须显式启用；轮后核验后作为同项目历史参考，分别记录召回、采用和结果检查，不声称已证明优于其他做法|
+
+这次发布补齐以上源码和测试，**不携带部署者的运行开关、记忆账本或冻结状态，也不迁移或重置它们**。模糊任务下的主动召回仍有缺口，见[已知限制与暂缓方向](docs/research/EXPERIENCE-REUSE-GAPS.zh-CN.md)。
 
 ## 架构与任务流程
 
@@ -43,7 +51,10 @@ flowchart TD
     H -. 可选 .-> A["session-router<br/>独立会话创建、转交与状态核对"]
     T --> E[执行结果与显式使用声明]
     E --> M
-    M --> P[候选修订、复盘与独立任务评估]
+    E --> X[原生执行来源与轮后复核]
+    X --> P[待审候选与冻结评测]
+    X --> D[已登记机制的受限日常经验]
+    X --> V[条件化成功方法与采用反馈]
 ```
 
 ### 三类内容各司其职
@@ -69,7 +80,7 @@ flowchart TD
 
 |目录|主要功能|接入说明|
 |---|---|---|
-|[`packages/mnemo`](packages/mnemo)|暂存捕获、项目隔离、相关性检索、工作记忆、来源与版本链、纠错、使用收据、候选评估和复盘|需要独立可写数据目录；同一数据目录采用单写者锁|
+|[`packages/mnemo`](packages/mnemo)|暂存捕获、项目隔离、相关性检索、工作记忆、来源与版本链、纠错、使用收据、候选评估、日常恢复及成功方法复用|需要独立可写数据目录；同一数据目录采用单写者锁；经验通道按需配置|
 |[`packages/knowledge-vault`](packages/knowledge-vault)|知识记录与历史版本、集合/目录、关键词检索、可配置向量与重排、OCR、引用、来源授权和回收站|依赖宿主 `storageDomain`、工具及会话上下文|
 |[`packages/reader`](packages/reader)|小说、剧本、漫画和文档阅读；导入 TXT、Markdown、DOCX、EPUB、PDF；章节分页和修订管理|读取源文件前须配置允许的来源根；部分处理能力依赖知识服务或原生工具|
 |[`packages/file-manager`](packages/file-manager)|目录浏览、预览、复制/剪切/粘贴、移动、重命名、回收站、文件导入与知识设置界面|应显式设置文件根目录和读写权限；客户端入口依赖宿主 UI 服务|
@@ -100,7 +111,7 @@ flowchart TD
 
 完整依赖以 [`package.json`](package.json) 和 [`package-lock.json`](package-lock.json) 为准。这是对 **SDK 版本和接口** 的约束，不代表任意同名宿主发行版都兼容。
 
-宿主需提供工具运行时、系统提示词、会话/代理上下文与持久存储；Web 功能还需已认证的连接路由和客户端插件加载器。技能功能需宿主技能 Registry、文件提供器、工作目录等服务；模型维护任务需要宿主模型服务，交互纠错和复盘还会使用用户提问服务。可选会话路由需要更多控制、审批、工作区与投影服务，详见其 [`inject` 声明](packages/session-router/index.js)。
+宿主需提供工具运行时、系统提示词、会话/代理上下文与持久存储；Web 功能还需已认证的连接路由和客户端插件加载器。技能功能需宿主技能 Registry、文件提供器、工作目录等服务；模型维护任务需要宿主模型服务，交互纠错和复盘还会使用用户提问服务。经验的持久化来源复核另使用官方 `sessionQuery.observeSession()` 和 `sessionPersistence.stat()`；服务缺失时只能核验仍然活跃的准确会话身份，不会猜测旧来源或恢复旧 Agent。可选会话路由需要更多控制、审批、工作区与投影服务，详见其 [`inject` 声明](packages/session-router/index.js)和[经验接入契约](docs/INTEGRATION.md#经验通道的宿主契约)。
 
 ## 安装与部署
 
@@ -116,12 +127,13 @@ git clone "$REPO_URL" harness-memory-suite
 cd harness-memory-suite
 npm ci --ignore-scripts
 npm run prepare:host
+npm run build
 npm run verify
 ```
 
 这里的 `prepare:host` **只给本仓库 `node_modules` 中的开发 SDK 副本打补丁**，不会自动找到或修改已运行的宿主。补丁脚本检查版本、补丁摘要和全部目标文件校验和；未知基线拒绝覆盖，目标内容已匹配时幂等退出。
 
-`npm run build` 可单独构建文件管理客户端。仓库也保留阅读器随包发行的客户端和第三方资源，但不声称包含这些预构建产物的完整原始 UI 构建工程。
+`npm run build` 构建文件管理和媒体客户端，包括图片/视频服务、图片工坊及镜头工坊。媒体客户端产物不提交 Git，全新克隆后须先构建再执行完整验证，否则相关测试会报告客户端文件缺失。仓库也保留阅读器随包发行的客户端和第三方资源，但不声称包含这些预构建产物的完整原始 UI 构建工程。
 
 ### 2. 选择宿主目录和数据目录
 
@@ -150,10 +162,13 @@ mkdir -p "$HOST_PLUGIN_ROOT" "$MEMORY_DATA_ROOT" \
 ```bash
 set -euo pipefail
 git archive HEAD:packages | tar -x -C "$HOST_PLUGIN_ROOT"
+for module in file-manager image-studio video-studio image-workshop live-film; do
+  cp "packages/$module/client.js" "$HOST_PLUGIN_ROOT/$module/client.js"
+done
 node scripts/apply-host-compat.mjs --package-root "$HOST_TOOLS_PACKAGE"
 ```
 
-目录内虽含可选路由文件，但默认配置不会加载它。保留各模块原目录名，尤其是 `context-policy` 与 `dsh-skill-lifecycle` 的相邻关系。
+`git archive` 只导出已提交源码，因此上面的复制步骤另行带上前一步从同一版本构建的客户端；不复制 `node_modules` 或运行数据。目录内虽含可选路由文件，但默认配置不会加载它。保留各模块原目录名，尤其是 `context-policy` 与 `dsh-skill-lifecycle` 的相邻关系。
 
 显式 `--package-root` 会修改选定 SDK 包。给现有宿主升级前，应安排停止相关进程的维护窗口；不要依赖运行中的模块热替换来完成升级。脚本先在临时目录应用并验证当前版本补丁，再复核目标摘要并替换文件，不保留旧软件版本或自动回切。失败时保持停机并修复当前版本；临时文件清理不代表多文件写入具备事务性。配置与业务数据应独立保护。
 
@@ -298,6 +313,17 @@ description: 当用户明确要求检查项目说明文档是否与代码一致�
 
 需要隔离本轮记忆时，可以明确要求“本轮不要读取或写入记忆”。验收时应检查实际工具返回和记忆状态，不能仅以模型口头回复作为生效证据。
 
+### 经验：保存成功方法，再核对是否真的复用
+
+先按[成功方法安装与使用](docs/SUCCESSFUL-EXPERIENCES.zh-CN.md)启用执行采集与 `successfulExperiences`。配置生成器只填写基础记忆目录，不会自动启用这些可选通道。
+
+1. 完成有复用价值的任务，并用另一次真实工具调用检查产物。
+2. 用 `mnemo_experience(action="recent_evidence")` 获取本轮结果序号，再 `record_success` 提交方法和证据引用；轮后核对来源才形成条件卡片。
+3. 后续任务通过 `recall_success` 检索。当前自动提示只按用户原句做有界关键词匹配，不保证含糊目标能够命中。
+4. 逐条核对条件，在业务动作之前 `use_success`；动作和后续检查各自单独执行，再用 `outcome_success` 关联结果。发现不适用或失败时 `fail_success` 暂停已采用卡片。
+
+通过 `success_status`、`inspect_success` 分别核对已召回、已采用、检查完成和失败反馈。保存成功、检索命中、模型宣称采用和任务实际获益是不同结果；卡片不能更改当前用户指令或工具权限。参数格式、来源条件和错误处理见上述使用页。
+
 ### 可选：独立会话编排
 
 启用 `session-router` 后，可按授权使用 `list_live_agents`、`create_agent_session`、`dispatch_to_agent` 和 `get_agent_dispatch`。投递时保留同一 `request_id` 用于重试核对。
@@ -311,6 +337,7 @@ description: 当用户明确要求检查项目说明文档是否与代码一致�
 |模块|常用字段|说明|
 |---|---|---|
 |MNEMO|`dir`、`injectMode`、`scope`、`evaluationCorpusPath`|显式选择数据目录；优先使用会话工作目录推导项目作用域；评估语料仅保留本地|
+|MNEMO 经验|`executionExperience`、`autoLearning`、`dailyLearning`、`successfulExperiences`|独立配置采集、评测与两类受限复用；只需要成功方法时显式关闭 `autoLearning`，见[配置示例](docs/SUCCESSFUL-EXPERIENCES.zh-CN.md#安装与配置)|
 |knowledge-vault|`enabled`、`maxRecordChars`、`maxResults`|默认开启、单记录上限 20000 字符、结果数量默认 8；模型设置持久化于宿主存储域|
 |reader|`storageDir`、`sourceRoots`|独立阅读存储和允许的绝对来源根；`sourceRoots` 默认为空|
 |file-manager|`root`、`writable`、`trash`、`media`、`thumbnails`|默认文件根为运行用户主目录、默认可写；对外部署应显式收紧|
@@ -342,6 +369,8 @@ activationShadow:
 
 ### 本地命令
 
+全新克隆或修改客户端源码后，先按安装步骤完成依赖准备和 `npm run build`，再执行以下检查。
+
 ```bash
 npm run check:privacy
 npm run check:syntax
@@ -353,7 +382,7 @@ npm run test:policy
 npm run verify
 ```
 
-本轮源码验证为 **916 通过、0 失败、5 跳过**；跳过项依赖本地 PDF/OCR 工具或专用 fixture。以自己环境中的实际结果为准，不要将跳过项记作通过。测试范围与限制见 [VALIDATION](docs/VALIDATION.md)。
+以当前版本执行 `npm run verify` 的结果为准；依赖本地 PDF/OCR 工具或专用 fixture 的检查可能跳过，不要将跳过项记作通过。测试范围与限制见 [VALIDATION](docs/VALIDATION.md)。
 
 ### 接入后验收
 
@@ -373,6 +402,8 @@ npm run verify
 |插件一直等待服务或工具没有出现|所需服务、代理/模板作用域、插件依赖和是否重复挂载官方技能工具|
 |后端可用但没有文件/技能/阅读器入口|客户端模块是否被宿主加载，所需 UI 服务是否存在；检查浏览器控制台|
 |记忆只读或写锁冲突|是否多个进程共用同一 `dir`；每个实例选择独立目录，不能直接删除活跃写锁|
+|经验卡存在却未召回|通道是否启用、同项目/当前轮身份、来源是否仍有效、合同和有效期、当前查询与线索是否匹配；含糊目标不会自动触发事实补充后的二次检索|
+|成功经验登记失败或留待审查|`recent_evidence` 的真实结果序号、数组字段、独立的后续检查、`expected` 原文连续摘录；记忆回执、失败结果或模型自述不能作为检查证据|
 |知识记录看得见但读取被拒绝|当前项目、来源根、来源授权、条目版本和请求上下文；不要扩大授权绕过错误|
 |模型预设无法调用|是否仍为占位模型、路由是否启用、协议/凭据是否匹配；目录存在不证明连接成功|
 |PDF/OCR 测试跳过或处理不可用|原生工具、语言数据及测试 fixture 是否具备；视觉转写与本地 OCR 是不同路径|
@@ -389,7 +420,7 @@ npm run verify
 
 ## 当前边界与许可证
 
-这是源码级初版：已有项目内检索、版本、来源、作用域、使用收据和候选评估机制，但测试通过不证明开放域检索没有噪声、长期任务一定获益、所有宿主/供应商均可用，或自动采纳已经达标。自动采纳默认不开放；候选推广需按具体候选绑定、预先冻结并配对的独立任务结果。阅读器、技能管理和可选路由的完整宿主浏览器行为仍需部署者单独验收。
+这是源码级初版：已有项目内检索、版本、来源、作用域、使用收据和候选评估机制，但测试通过不证明开放域检索没有噪声、长期任务一定获益、所有宿主/供应商均可用，或通用自主学习已经完成。旧统计候选的推广需按具体候选绑定、预先冻结并配对的独立任务结果；显式启用的日常经验和成功方法是独立历史参考通道，不能拿其登记量代替推广证据。阅读器、技能管理和可选路由的完整宿主浏览器行为仍需部署者单独验收。
 
 公开源码不自动授予所有组件额外使用权。保留组件原有声明，详见 [NOTICE](NOTICE.md)、[宿主补丁上游 MIT 许可证](licenses/dsh-tools-LICENSE) 和 [阅读器第三方通知](packages/reader/THIRD-PARTY.md)。根 `package.json` 的 `private: true` 用于阻止意外 npm 发布，与 GitHub 仓库公开可见性无关。
 

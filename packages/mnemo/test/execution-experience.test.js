@@ -127,3 +127,33 @@ test('warm-source retry honors read-only lease and candidate quota without parti
  ready=false;await q.capture(s,{scope});await q.capture({...s,id:'second'},{scope});ready=true
  const result=await q.revalidateAll();assert.equal(q.list({scope}).length,1);assert.equal(result.retryResults.filter(x=>x.status==='quota-paused').length,1)
 }));
+
+test('next-turn inbox bookkeeping after completion preserves frozen packet and source cursor across restart',()=>fixture(async directory=>{
+ const r=rows();let live=session(r)
+ const options={...opts(directory),resolveSession:()=>live}
+ let c=new ExecutionExperienceCapture(options);await c.capture(live,{scope});const first=c.list({scope})[0]
+ await c.recordHumanReview(first.id,{scope,expectedPacketHash:first.reviewPacketHash,decision:'approve-frozen-evaluation',receipt:{id:'original-review'}})
+ r.push(e(5,'agent/inbox/spliced',{target:'next-turn',removedCount:1}));live=session(r)
+ assert.equal((await c.capture(live,{scope})).status,'complete')
+ assert.equal(c.list({scope})[0].reviewPacketHash,first.reviewPacketHash)
+ assert.equal((await c.validateCandidate(first.id,{scope})).status,'verified')
+ assert.equal(c.list({scope})[0].review.status,'approved-for-frozen-evaluation')
+ c=new ExecutionExperienceCapture(options)
+ assert.equal((await c.revalidateAll()).verified,1)
+ assert.equal(Object.values(c.snapshot().sources)[0].cursor,5)
+ r.push(e(6,'turn/start',{turn:2}),e(7,'user/message',{source:{kind:'user'},content:[{type:'text',text:'new request'}]}));live=session(r)
+ await c.capture(live,{scope});assert.equal((await c.validateCandidate(first.id,{scope})).status,'verified')
+ assert.equal(c.inspect(first.id,{scope}).evidenceRefs.length,5)
+}));
+
+test('contract upgrade discards old authority but resumes a known session at a fresh native turn',()=>fixture(async directory=>{
+ const r=rows();let live=session(r),c=new ExecutionExperienceCapture({...opts(directory),resolveSession:()=>live})
+ await c.capture(live,{scope});const old=c.list({scope})[0]
+ c=new ExecutionExperienceCapture({...opts(directory),contractFingerprint:'upgraded-fixture',resolveSession:()=>live})
+ assert.equal((await c.capture(live,{scope})).status,'contract-changed');assert.equal(c.list({scope}).length,0)
+ assert.equal((await c.capture(live,{scope})).status,'waiting-new-contract-turn')
+ r.push(e(5,'agent/inbox/spliced',{target:'next-turn'}),e(6,'turn/start',{turn:2}),e(7,'user/message',{source:{kind:'schedule'},content:[]}),e(8,'tool/call',{turn:2,callId:'new',name:'read_file'}),e(9,'tool/result',{turn:2,message:{toolCallId:'new',isError:false}}),e(10,'turn/end',{turn:2,reason:'completed'}));live=session(r)
+ assert.equal((await c.capture(live,{scope})).status,'complete')
+ const fresh=c.list({scope})[0];assert.notEqual(fresh.id,old.id);assert.equal(fresh.contractFingerprint,'upgraded-fixture');assert.equal(fresh.evidenceRefs[0].seq,6);assert.equal(fresh.review,undefined)
+ assert.equal((await c.validateCandidate(fresh.id,{scope})).status,'verified')
+}));

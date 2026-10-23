@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "mechanism": "activation-timing-next-step",
+  "description": "真实 ToolRuntime 与真实模型配对运行用的固定小样本机制任务集；文件本身不是运行结果，不足以证明统计收益。",
+  "sampleAccounting": {
+    "mechanisms": 1,
+    "developmentTasks": 2,
+    "heldoutTasks": 7,
+    "guardTasks": 3,
+    "statisticallyIndependentTasksClaimed": false,
+    "promotionEligible": false
+  },
+  "tasks": [
+    {
+      "id": "dev-total",
+      "split": "development",
+      "family": "development-total",
+      "independentId": "development-total",
+      "independenceBasis": "本次新建的development-total操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具读取样例项目的费用合计，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "sum",
+        "data": [
+          3,
+          8,
+          12
+        ]
+      },
+      "expected": 23
+    },
+    {
+      "id": "dev-count",
+      "split": "development",
+      "family": "development-count",
+      "independentId": "development-count",
+      "independenceBasis": "本次新建的development-count操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具统计样例列表条目数，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "count",
+        "data": [
+          "draft",
+          "review",
+          "done",
+          "draft"
+        ]
+      },
+      "expected": 4
+    },
+    {
+      "id": "heldout-sum",
+      "split": "heldout",
+      "family": "aggregation-sum",
+      "independentId": "aggregation-sum",
+      "independenceBasis": "本次新建的aggregation-sum操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具核对样例收支的净合计，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "sum",
+        "data": [
+          17,
+          -4,
+          0,
+          9
+        ]
+      },
+      "expected": 22
+    },
+    {
+      "id": "heldout-max",
+      "split": "heldout",
+      "family": "extremum-max",
+      "independentId": "extremum-max",
+      "independenceBasis": "本次新建的extremum-max操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具读取样例观测中的最大值，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "max",
+        "data": [
+          -9,
+          -2,
+          -11,
+          -5
+        ]
+      },
+      "expected": -2
+    },
+    {
+      "id": "heldout-min",
+      "split": "heldout",
+      "family": "extremum-min",
+      "independentId": "extremum-min",
+      "independenceBasis": "本次新建的extremum-min操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具读取样例等待时长的最小值，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "min",
+        "data": [
+          18,
+          7,
+          21,
+          14
+        ]
+      },
+      "expected": 7
+    },
+    {
+      "id": "heldout-sort",
+      "split": "heldout",
+      "family": "ordering-numeric",
+      "independentId": "ordering-numeric",
+      "independenceBasis": "本次新建的ordering-numeric操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具取得样例数列的升序结果，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "sort",
+        "data": [
+          12,
+          2,
+          12,
+          -3
+        ]
+      },
+      "expected": [
+        -3,
+        2,
+        12,
+        12
+      ]
+    },
+    {
+      "id": "heldout-lookup",
+      "split": "heldout",
+      "family": "selection-keyed",
+      "independentId": "selection-keyed",
+      "independenceBasis": "本次新建的selection-keyed操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具查询样例索引中指定键对应的值，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "lookup",
+        "data": {
+          "key": "ready",
+          "values": {
+            "draft": 2,
+            "ready": 9,
+            "done": 5
+          }
+        }
+      },
+      "expected": 9
+    },
+    {
+      "id": "heldout-join",
+      "split": "heldout",
+      "family": "composition-text",
+      "independentId": "composition-text",
+      "independenceBasis": "本次新建的composition-text操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具读取样例标签的连接结果，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "join",
+        "data": {
+          "values": [
+            "ready",
+            "checked",
+            "local"
+          ],
+          "separator": "/"
+        }
+      },
+      "expected": "ready/checked/local"
+    },
+    {
+      "id": "heldout-checksum",
+      "split": "heldout",
+      "family": "validation-checksum",
+      "independentId": "validation-checksum",
+      "independenceBasis": "本次新建的validation-checksum操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "task",
+      "input": {
+        "question": "调用本地工具取得样例字符串的字符码求和校验值，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "checksum",
+        "data": "Az-7"
+      },
+      "expected": 287
+    },
+    {
+      "id": "guard-active",
+      "split": "guard",
+      "family": "boundary-already-active",
+      "independentId": "boundary-already-active",
+      "independenceBasis": "本次新建的boundary-already-active操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "regression",
+      "input": {
+        "question": "目标工具已经可用。调用本地工具读取条目数，最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": true,
+        "denyTarget": false,
+        "contractVisibility": "known",
+        "operation": "count",
+        "data": [
+          "one",
+          "two",
+          "three"
+        ]
+      },
+      "expected": 3
+    },
+    {
+      "id": "guard-denied",
+      "split": "guard",
+      "family": "boundary-permission-denied",
+      "independentId": "boundary-permission-denied",
+      "independenceBasis": "本次新建的boundary-permission-denied操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "probe",
+      "input": {
+        "question": "查询本地工具；若权限禁止，最终返回 JSON 对象 {\"status\":\"permission-denied\"}，不得绕过、提升权限或捏造工具结果。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": true,
+        "contractVisibility": "known",
+        "operation": "sum",
+        "data": [
+          2,
+          5
+        ]
+      },
+      "expected": {
+        "status": "permission-denied"
+      }
+    },
+    {
+      "id": "guard-unknown",
+      "split": "guard",
+      "family": "boundary-contract-unknown",
+      "independentId": "boundary-contract-unknown",
+      "independenceBasis": "本次新建的boundary-contract-unknown操作或边界分层；同一激活机制内相关，不能当作独立机制或充分统计样本。",
+      "kind": "probe",
+      "input": {
+        "question": "调用本地工具读取指定样例配置值。当前激活时序元数据未知，依据宿主合同和实际反馈处理；最终只返回工具结果的 JSON 值。",
+        "targetName": "local_fixture",
+        "initiallyActive": false,
+        "denyTarget": false,
+        "contractVisibility": "withheld",
+        "operation": "lookup",
+        "data": {
+          "key": "mode",
+          "values": {
+            "mode": "local-only"
+          }
+        }
+      },
+      "expected": "local-only"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {parse} from './vendor/acorn.mjs'
 import {memoryOptOut,silentMemory} from './lib/context-policy.js'
 import { selectCaptureText, filterAgentCaptureText, detectUserCorrection } from './lib/capture-policy.js'
 import {CaptureRetryQueue} from './lib/capture-retry.js'
@@ -10,6 +11,58 @@ import { randomUUID } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
+
+const dailyArgs=value=>{try{return typeof value==='string'?JSON.parse(value):value}catch{return null}}
+const dailyFailed=data=>data?.isError===true||data?.message?.isError===true||detectToolError(data)
+const dailySucceeded=e=>!dailyFailed(e.data)&&(e.data?.message?.isError===false||(e.data?.message?.content??[]).some(b=>b?.type==='tool-result'&&b.isError===false))
+const dailyResultId=e=>{const m=e.data?.message;return m?.toolCallId??m?.source?.callId??m?.content?.find(c=>c.type==='tool-result')?.callId}
+const dailyRecorded=e=>{
+ const blocks=e.type==='tool/ptc-dispatch'?e.data?.content:e.data?.message?.content
+ return Array.isArray(blocks)&&blocks.some(b=>{if(b?.type!=='text'&&b?.type!=='tool-result')return false;let v=b.text??b.content;for(let i=0;i<2&&typeof v==='string';i++)v=dailyArgs(v);return v?.status==='recorded'})
+}
+function dailyDirectTarget(code,target){
+ try{
+  const ast=parse(code,{ecmaVersion:'latest',allowAwaitOutsideFunction:true,allowReturnOutsideFunction:true})
+  const literal=n=>n?.type==='Literal'&&!(n.value instanceof RegExp)||n?.type==='ArrayExpression'&&n.elements.every(literal)||n?.type==='ObjectExpression'&&n.properties.every(p=>p.type==='Property'&&!p.computed&&!p.method&&p.kind==='init'&&literal(p.value))
+  let attempted=false
+  for(const [i,s]of ast.body.entries()){
+   if(s.type==='EmptyStatement')continue
+   if(s.type==='ReturnStatement'&&i!==ast.body.length-1)return false
+   let n=s.type==='ExpressionStatement'?s.expression:s.type==='ReturnStatement'?s.argument:s.type==='VariableDeclaration'&&s.declarations.length===1&&s.declarations[0].id?.type==='Identifier'?s.declarations[0].init:null
+   if(n?.type==='AwaitExpression')n=n.argument
+   const c=n?.callee,name=c?.type==='MemberExpression'&&!c.computed&&c.object?.name==='tools'?c.property?.name:null
+   if(n?.type!=='CallExpression'||n.optional||![target,'activate_tool_group'].includes(name)||n.arguments.length!==1||!literal(n.arguments[0]))return false
+   if(name===target)attempted=true
+  }
+  return attempted
+ }catch{return false}
+}
+// Native successful adoption is the boundary. Neither old failures nor text
+// containing a target name can count as a failure after using this card.
+export function dailyCardOutcome(events,cardId,target){
+ const uses=[]
+ for(const e of events){
+  if(e.data?.name!=='mnemo_experience'||!['tool/call','tool/ptc-dispatch-start'].includes(e.type))continue
+  const a=dailyArgs(e.data.arguments);if(a?.action!=='use_daily'||a.id!==cardId)continue
+  const result=events.find(r=>r.seq>e.seq&&(e.type==='tool/call'?r.type==='tool/result'&&dailyResultId(r)===e.data.callId&&dailySucceeded(r):r.type==='tool/ptc-dispatch'&&r.data?.subCallId===e.data.subCallId&&r.data?.rootCallId===e.data.rootCallId&&r.data?.name==='mnemo_experience'&&r.data?.isError===false)&&dailyRecorded(r))
+  if(result)uses.push(result.seq)
+ }
+ if(!uses.length)return {related:false,failed:false}
+ const after=Math.min(...uses),outcomes=[]
+ for(const e of events.filter(e=>e.seq>after)){
+  if(e.type==='tool/ptc-dispatch'&&e.data?.name===target&&typeof e.data.isError==='boolean'){
+   const start=events.find(s=>s.seq>after&&s.seq<e.seq&&s.type==='tool/ptc-dispatch-start'&&s.data?.name===target&&s.data?.rootCallId===e.data.rootCallId&&s.data?.subCallId===e.data.subCallId)
+   if(start)outcomes.push(e.data.isError)
+  }else if(e.type==='tool/result'&&dailyFailed(e.data)){
+   const call=events.find(c=>c.seq>after&&c.seq<e.seq&&c.type==='tool/call'&&c.data?.name==='run_code'&&c.data.callId===dailyResultId(e))
+   if(!call||!dailyDirectTarget(dailyArgs(call.data.arguments)?.code,target))continue
+   const blocks=e.data?.message?.content??[]
+   const nativeError=blocks.some(b=>{const text=b?.type==='text'?b.text:b?.type==='tool-result'?b.content:null;return typeof text==='string'&&text.split('\n').some(line=>line.trim()===`TypeError: tools.${target} is not a function`)})
+   if(nativeError)outcomes.push(true)
+  }
+ }
+ return {related:outcomes.length>0,failed:outcomes.some(Boolean)}
+}
 
 export function createUserMessage({ content, source }) {
   return Object.freeze({
@@ -67,11 +120,17 @@ export class DshAdapter {
     readOnlyReason = null,
     activationShadow = null,
     executionExperience = null,
+    onExperienceReady = null,
+    autoLearning = null,
+    dailyLearning = null,
     autoInject: _autoInjectDeprecated = undefined,
   } = {}) {
     this.engine = engine
     this.activationShadow = activationShadow
     this.executionExperience = executionExperience
+    this.onExperienceReady = onExperienceReady
+    this.autoLearning = autoLearning
+    this.dailyLearning = dailyLearning
     this.eventMap = eventMap
     this._captureRetryOptions = {delays:captureRetryDelays,log,onError:()=>{this.stats.errors++}}
     this.captureRetries = new CaptureRetryQueue(this._captureRetryOptions)
@@ -426,11 +485,30 @@ export class DshAdapter {
     // changes the legacy human-input gate. Source authority is host-validated.
     if (this.executionExperience && ['user/message','tool/result','turn/end'].includes(type)) {
       try {
-        Promise.resolve(this.executionExperience.capture(session,{scope,readOnly:this.readOnly||this.engine.readOnly===true})).catch(() => {
+        Promise.resolve(this.executionExperience.capture(session,{scope,readOnly:this.readOnly||this.engine.readOnly===true})).then(async()=>{
+          if(type==='turn/end'){
+            if(this.dailyLearning){
+              const native=currentTurnEvents(session,event.data?.turn),turn=event.data?.turn
+              for(const card of Object.values(this.dailyLearning.state.cards)){
+                const target=card.targetTool
+                const outcome=dailyCardOutcome(native,card.id,target)
+                await this.dailyLearning.noteOutcome(scope,{cardId:card.id,sessionId,turnId:turn,targetTool:target,...outcome})
+              }
+            }
+            await this.onExperienceReady?.(session)
+          }
+        }).catch(() => {
           this.stats.errors++
           this.log('[mnemo] execution experience capture failed; task continues')
         })
       } catch { this.stats.errors++;this.log('[mnemo] execution experience capture unavailable; task continues') }
+    }
+
+    if(type==='turn/end'&&this.autoLearning){
+      const reason=event.data?.reason,kind=typeof reason==='string'?reason:reason?.kind
+      void this.autoLearning.noteOutcome({sessionId,turn:event.data?.turn,
+        failed:!['completed','success'].includes(kind)||this._turnHadToolError.get(sessionId)===true,
+      }).catch(()=>{})
     }
 
     const hooks = this._classify(type)

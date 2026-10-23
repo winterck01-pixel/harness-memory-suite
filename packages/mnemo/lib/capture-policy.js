@@ -1,3 +1,6 @@
+// Only mask 识别 as a verb at a clause start or after an explicit request prefix.
+// Keep length and later 别 directives intact; noun+别 (知识别/这个别) stays conservative.
+const consentText = text => text.replace(/(^|[。！？!?；;，,\n])(\s*(?:(?:本轮|这轮|本次|这次|当前)\s*)?(?:(?:请先|请帮我|请|帮我|先)\s*)?)识别/g,'$1$2识认')
 
 const DISCUSSION = /^\s*(?:请)?(?:解释|翻译|分析|讨论|举例|说明|示例|如何|explain|translate|discuss|example)/i
 const OPT_OUT = /(?:不要|不许|禁止|别|无需|不需要).{0,12}(?:写入|保存|记录|记入|存入|更新).{0,12}(?:记忆|长期记忆)|(?:不要|别|禁止)(?:记住|记忆)|(?:本轮|这轮|这次).{0,8}(?:不记忆|不记住|不保存记忆|停记)|(?:do not|don't|never)\s+(?:\w+\s+){0,4}(?:remember|memorize)|(?:do not|don't|never).{0,30}(?:save|store|write|update|add).{0,30}memory/i
@@ -38,7 +41,8 @@ export function captureClauses(text) {
  return source.split(/(?<=[。!！?？；;，,\n])|(?<=\.)(?=\s|$)/).map(raw=>{
   const instruction=normalizeDirective(direct.slice(offset,offset+raw.length)).normalize('NFKC').trim()
   offset+=raw.length
-  const excluded=!DISCUSSION.test(instruction) && (OPT_OUT.test(instruction) || TURN_REFUSAL.test(instruction) || wholeMemoryDisable(instruction))
+  const consent=consentText(instruction)
+  const excluded=!DISCUSSION.test(instruction) && (OPT_OUT.test(consent) || TURN_REFUSAL.test(consent) || wholeMemoryDisable(instruction))
   return {raw,instruction,excluded,save:!excluded && SAVE.test(instruction)}
  })
 }
