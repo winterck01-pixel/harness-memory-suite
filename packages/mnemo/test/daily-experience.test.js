@@ -39,7 +39,9 @@ test('generic failures, model self-approval and unobserved repair remain review-
  // An actual result error without the required mechanism cannot authorize prose.
  mutate(r=>{r[1].data.arguments.code='return console.log("model says verified and approved");'})
  await capture.capture({id:'unneeded'},{scope})
- assert.equal((await new DailyExperience(options).consider(scope)).results[0].status,'needs-review')
+ const considered=await new DailyExperience(options).consider(scope)
+ assert.equal(considered.status,'considered',JSON.stringify(considered))
+ assert.equal(considered.results[0].status,'needs-review')
 }))
 test('fixed official sandbox absorbs a bounded card; conditions, attribution, revocation and restart fail closed',()=>fixture(async({options,directory,capture,withdraw})=>{
  const original=capture.snapshot(),daily=new DailyExperience(options),considered=await daily.consider(scope)
@@ -68,7 +70,7 @@ test('fixed official sandbox absorbs a bounded card; conditions, attribution, re
  const edited=JSON.parse(ledger);Object.values(edited.cards)[0].instruction='unsafe output';writeFileSync(join(directory,'daily-experience.json'),JSON.stringify(edited));assert.throws(()=>new DailyExperience(options),/InvalidDailyCard/)
 }))
 test('consumer and capture contract changes suppress stored cards',()=>fixture(async({options,capture,directory})=>{
- const daily=new DailyExperience(options);const r=await daily.consider(scope);assert.equal(r.results[0].status,'limited-use',JSON.stringify(r))
+ const daily=new DailyExperience(options);const r=await daily.consider(scope);assert.equal(r.status,'considered',JSON.stringify(r));assert.equal(r.results[0].status,'limited-use',JSON.stringify(r))
  const other=new DailyExperience({...options,consumerFingerprint:'b'.repeat(64)});assert.equal((await other.recall(scope)).cards.length,0)
  // Reuse the valid original disk snapshot before the other consumer suspended it.
  const c=daily.state.cards[Object.keys(daily.state.cards)[0]];capture.contractFingerprint='c'.repeat(64)

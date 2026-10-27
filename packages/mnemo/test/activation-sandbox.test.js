@@ -5,7 +5,8 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {pathToFileURL,fileURLToPath} from 'node:url'
 import {candidateFingerprint as digest} from '../lib/evaluation.js'
-import {activationOracle,activationContractManifest,validateActivationTask,validateFixtureCode,createActivationSandbox,evaluateActivationTask} from '../lib/activation-sandbox.js'
+import {activationOracle,activationContractManifest,validateActivationTask,validateFixtureCode,createActivationSandbox,evaluateActivationTask} from './helpers/activation-host.mjs'
+import {sandboxOptions,policyDirectory,lifecycleDirectory,hostDependencyAnchor as configuredAnchor,hostNodeModules,hostScopedPackages,hostRequire} from './helpers/activation-host.mjs'
 const task=(changes={})=>({id:'sum-case',independentId:'sum-source',independenceBasis:'independently authored sum operation',kind:'task',input:{question:'Call the fixture tool and report its exact returned value.',targetName:'isolated_probe',initiallyActive:false,denyTarget:false,contractVisibility:'known',operation:'sum',data:[7,11,13]},expected:31,...changes})
 const instruction='Only when the exact known contract matches, permission allows and target is not active: activate, return, allow the next prompt assembly, and use a fresh run_code to call the target. Waiting in one run is insufficient.'
 const action=code=>({text:JSON.stringify({type:'run_code',code})})
@@ -37,7 +38,7 @@ test('real runtime paired arms retain timing errors and verify exact oracle from
  const contract=(await activationContractManifest()).fingerprint
  const baseline=await evaluateActivationTask({task:task(),contractFingerprint:contract,arm:'baseline',complete:sequence([action('await tools.activate_tool_group({tools:["isolated_probe"]});return await tools.isolated_probe({});'),action(invoke),final(31)])})
  let budget=0
- const candidate=await evaluateActivationTask({task:task(),contractFingerprint:contract,arm:'candidate',instruction,beforeRequest:()=>budget++,complete:sequence([action(activate),action(invoke),final(31)],r=>assert.equal(JSON.stringify(r.messages).includes('data'),false))})
+ const candidate=await evaluateActivationTask({task:task(),contractFingerprint:contract,arm:'candidate',instruction,beforeRequest:()=>budget++,complete:sequence([action(activate),action(invoke),final(31)],r=>{const prompt=JSON.parse(r.messages[1].content);assert.equal(Object.hasOwn(prompt,'data'),false);assert.equal(Object.hasOwn(prompt,'expected'),false);assert.equal(JSON.stringify(r.messages).includes(JSON.stringify(task().input.data)),false)})})
  assert.equal(baseline.success,true);assert.equal(baseline.activationTimingErrors,1)
  assert.equal(candidate.success,true);assert.equal(candidate.activationTimingErrors,0);assert.equal(candidate.instructionApplied,true);assert.equal(budget,3)
  assert.equal(candidate.actualTargetCalls,1);assert.equal(candidate.receipt.kind,'official-tool-runtime-sandbox');assert.ok(candidate.receipt.sourceHashes.runtime)
@@ -110,8 +111,8 @@ test('contract hashes recursive policy modules and requires restart after transi
  const root=await mkdtemp(join(tmpdir(),'activation-policy-contract-'))
  try{
   const policyRoot=join(root,'context-policy')
-  await cp(new URL('../../context-policy/',import.meta.url),policyRoot,{recursive:true})
-  await cp(new URL('../../dsh-skill-lifecycle/',import.meta.url),join(root,'dsh-skill-lifecycle'),{recursive:true})
+  await cp(policyDirectory,policyRoot,{recursive:true})
+  await cp(lifecycleDirectory,join(root,'dsh-skill-lifecycle'),{recursive:true})
   const options={contextPolicyPath:join(policyRoot,'index.js')},before=await activationContractManifest(options)
   for(const file of ['execution-workflow.js','sections.js','recovery.js','memory-policy.js'])assert.ok(before.sourceHashes['policyDependency:'+file],file)
   await writeFile(join(policyRoot,'recursive-extra.js'),'export const marker=1\n')
@@ -134,8 +135,8 @@ test('versioned policy siblings require explicit operator dependency roots',asyn
  const root=await mkdtemp(join(tmpdir(),'activation-policy-roots-'))
  try{
   const policyRoot=join(root,'context-policy-versioned'),sibling=join(root,'skill-lifecycle-versioned')
-  await cp(new URL('../../context-policy/',import.meta.url),policyRoot,{recursive:true})
-  await cp(new URL('../../dsh-skill-lifecycle/',import.meta.url),sibling,{recursive:true})
+  await cp(policyDirectory,policyRoot,{recursive:true})
+  await cp(lifecycleDirectory,sibling,{recursive:true})
   const entry=join(policyRoot,'index.js')
   await writeFile(entry,(await readFile(entry,'utf8')).replace('../dsh-skill-lifecycle/','../skill-lifecycle-versioned/'))
   await assert.rejects(activationContractManifest({contextPolicyPath:entry,contextPolicyDependencyRoots:[]}),/OutsideRoot/)
@@ -171,7 +172,7 @@ test('detached plugin loads real official runtime through an explicit host packa
   for(const name of ['activation-sandbox.js','activation-safe-code.js','evaluation.js','model-client.js'])await cp(new URL('../lib/'+name,import.meta.url),join(lib,name))
   await cp(new URL('../vendor/acorn.mjs',import.meta.url),join(vendor,'acorn.mjs'))
   const detached=await import(pathToFileURL(join(lib,'activation-sandbox.js')).href)
-  const contextPolicyPath=fileURLToPath(new URL('../../context-policy/index.js',import.meta.url)),hostDependencyAnchor=fileURLToPath(new URL('../../../package.json',import.meta.url))
+  const contextPolicyPath=sandboxOptions.contextPolicyPath,hostDependencyAnchor=configuredAnchor
   const options={contextPolicyPath,hostDependencyAnchor}
   await assert.rejects(detached.activationContractManifest({contextPolicyPath}))
   const contract=await detached.activationContractManifest(options)
@@ -187,9 +188,9 @@ test('loaded policy mutation cannot certify cached code under a new disk fingerp
  const root=await mkdtemp(join(tmpdir(),'activation-loaded-identity-'))
  try{
   const policyRoot=join(root,'context-policy')
-  await cp(new URL('../../context-policy/',import.meta.url),policyRoot,{recursive:true})
-  await cp(new URL('../../dsh-skill-lifecycle/',import.meta.url),join(root,'dsh-skill-lifecycle'),{recursive:true})
-  await symlink(fileURLToPath(new URL('../../../node_modules/',import.meta.url)),join(root,'node_modules'))
+  await cp(policyDirectory,policyRoot,{recursive:true})
+  await cp(lifecycleDirectory,join(root,'dsh-skill-lifecycle'),{recursive:true})
+  await symlink(hostNodeModules,join(root,'node_modules'))
   const options={contextPolicyPath:join(policyRoot,'index.js')}
   const first=await createActivationSandbox({...options,task:task()});await first.close()
   const file=join(policyRoot,'policy.js'),original=await readFile(file,'utf8')
@@ -204,12 +205,12 @@ test('loaded policy mutation cannot certify cached code under a new disk fingerp
 test('physical SDK recursive dependency identity remains pinned across new host anchors',async()=>{
  const root=await mkdtemp(join(tmpdir(),'activation-sdk-identity-'))
  try{
-  const installed=fileURLToPath(new URL('../../../node_modules/@deepseek-ai/',import.meta.url)),scoped=join(root,'node_modules','@deepseek-ai')
+  const installed=hostScopedPackages,scoped=join(root,'node_modules','@deepseek-ai')
   await mkdir(scoped,{recursive:true});await writeFile(join(root,'package.json'),'{}')
   for(const name of await readdir(installed))if(name!=='dsh-tools')await symlink(join(installed,name),join(scoped,name))
   const tools=join(scoped,'dsh-tools');await mkdir(tools)
   await writeFile(join(tools,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-tools',type:'module',exports:'./index.js'}))
-  const actual=fileURLToPath(new URL('../../../node_modules/@deepseek-ai/dsh-tools/lib/index.js',import.meta.url))
+  const actual=hostRequire.resolve('@deepseek-ai/dsh-tools')
   await writeFile(join(tools,'index.js'),`export * from ${JSON.stringify(actual)}; import './nested.js';`)
   await writeFile(join(tools,'nested.js'),'export const marker=1;')
   const options={hostDependencyAnchor:join(root,'package.json')}
@@ -225,12 +226,12 @@ test('physical SDK recursive dependency identity remains pinned across new host 
 for(const mode of ['static-dual','dynamic-dual','static-import-only','dynamic-import-only'])test('ESM SDK export stays pinned: '+mode,async()=>{
  const root=await mkdtemp(join(tmpdir(),'activation-sdk-esm-'))
  try{
-  const installed=fileURLToPath(new URL('../../../node_modules/@deepseek-ai/',import.meta.url)),scoped=join(root,'node_modules','@deepseek-ai')
+  const installed=hostScopedPackages,scoped=join(root,'node_modules','@deepseek-ai')
   await mkdir(scoped,{recursive:true});await writeFile(join(root,'package.json'),'{}')
   for(const name of await readdir(installed))if(name!=='dsh-tools')await symlink(join(installed,name),join(scoped,name))
   const tools=join(scoped,'dsh-tools');await mkdir(tools)
   await writeFile(join(tools,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-tools',type:'module',exports:'./index.js'}))
-  const actual=fileURLToPath(new URL('../../../node_modules/@deepseek-ai/dsh-tools/lib/index.js',import.meta.url))
+  const actual=hostRequire.resolve('@deepseek-ai/dsh-tools')
   await writeFile(join(tools,'index.js'),`export * from ${JSON.stringify(actual)}; ${mode.startsWith('dynamic')?"await import('dual-sdk-fixture');":"import 'dual-sdk-fixture';"}`)
   const dual=join(root,'node_modules','dual-sdk-fixture');await mkdir(dual)
   await writeFile(join(dual,'package.json'),JSON.stringify({name:'dual-sdk-fixture',type:'module',exports:{'.':{import:'./index.mjs',...(!mode.endsWith('import-only')?{require:'./index.cjs'}:{})}}}))
@@ -284,5 +285,79 @@ for(const variant of ['trusted-cap','other-error-code','aborted-cap','provider-f
   assert.equal(r.status,'model-token-budget-exhausted');assert.equal(Object.hasOwn(r,'error'),false);assert.equal(r.errorCode,'ModelTokenBudgetExhausted')
  }else{
   assert.equal(r.status,'execution-unavailable');assert.ok(r.error)
+ }
+})
+
+test('native run_code description metadata is accepted without changing sandbox execution',async()=>{
+ const t=task();t.input.initiallyActive=true
+ const contract=(await activationContractManifest()).fingerprint
+ let requests=0
+ const r=await evaluateActivationTask({task:t,contractFingerprint:contract,maxSteps:2,complete:async({messages})=>{
+  requests++
+  if(requests===1)return {text:JSON.stringify({type:'run_code',code:invoke,description:'  Read isolated fixture  '})}
+  const previous=JSON.parse(messages.filter(m=>m.role==='assistant').at(-1).content)
+  assert.equal(previous.description,'Read isolated fixture')
+  return final(31)
+ }})
+ assert.equal(requests,2);assert.equal(r.actualTargetCalls,1);assert.equal(r.success,true)
+ assert.equal(r.status,'completed');assert.equal(r.receipt.productionWrites,false)
+})
+
+test('description compatibility keeps strict fields, metadata limits and code safety',async()=>{
+ const t=task();t.input.initiallyActive=true
+ const contract=(await activationContractManifest()).fingerprint
+ const invalid=[
+  {type:'run_code',code:invoke,description:null},
+  {type:'run_code',code:invoke,description:7},
+  {type:'run_code',code:invoke,description:'x'.repeat(1025)},
+  {type:'run_code',code:invoke,description:{text:'fixture'}},
+  {type:'run_code',code:invoke,description:'fixture',permission:true},
+  {type:'final',answer:31,description:'fixture'},
+ ]
+ for(const value of invalid){
+  const r=await evaluateActivationTask({task:t,contractFingerprint:contract,maxSteps:1,complete:async()=>({text:JSON.stringify(value)})})
+  assert.equal(r.actualTargetCalls,0);assert.equal(r.success,false);assert.equal(r.status,'budget-exhausted')
+ }
+ // A real model emitted multiple JSON values and a fabricated result after an
+ // otherwise valid action. Never execute only the first object from that text.
+ const validAction=JSON.stringify({type:'run_code',code:invoke,description:'Read fixture'})
+ for(const suffix of [JSON.stringify({type:'final',answer:31}),JSON.stringify({value:{'?':1}})]){
+  const r=await evaluateActivationTask({task:t,contractFingerprint:contract,maxSteps:1,complete:async()=>({text:validAction+'\n'+suffix})})
+  assert.equal(r.actualTargetCalls,0);assert.equal(r.success,false);assert.equal(r.status,'budget-exhausted');assert.equal(r.steps,1)
+ }
+ const unsafe=await evaluateActivationTask({task:t,contractFingerprint:contract,maxSteps:1,complete:async()=>({text:JSON.stringify({type:'run_code',code:'return process.env;',description:'Read fixture'})})})
+ assert.equal(unsafe.actualTargetCalls,0);assert.equal(unsafe.success,false);assert.equal(unsafe.status,'unsafe-code-rejected')
+})
+
+test('rejected multi-JSON remains visible for correction before complete real tool execution',async()=>{
+ const contract=(await activationContractManifest()).fingerprint
+ const rejected=JSON.stringify({type:'run_code',code:activate,description:'Activate fixture'})+'\n'+JSON.stringify({value:{'?':1}})
+ const outputs=[{text:rejected},action(activate),action(invoke),final(31)],seen=[]
+ const r=await evaluateActivationTask({task:task(),contractFingerprint:contract,maxSteps:4,complete:sequence(outputs,x=>seen.push(x.messages))})
+ assert.equal(r.success,true);assert.equal(r.steps,4);assert.equal(r.actualTargetCalls,1)
+ const second=seen[1],raw=second.find(m=>m.role==='assistant')
+ assert.equal(raw?.content,rejected)
+ const feedback=second.map(m=>{try{return JSON.parse(m.content)}catch{return null}}).find(m=>m?.actionRejected)?.actionRejected
+ assert.equal(feedback?.classification,'invalid-json');assert.equal(feedback.outputBytes,Buffer.byteLength(rejected));assert.equal(feedback.outputOmitted,false)
+ assert.equal(feedback.outputHash,digest(rejected));assert.match(feedback.instruction,/not executed/i)
+ assert.equal(r.requests[0].status,'completed');assert.equal(r.requests[0].actionValidation.status,'rejected');assert.equal(r.requests[0].actionValidation.classification,'invalid-json')
+ assert.deepEqual(r.requests.slice(1).map(q=>q.actionValidation),[{status:'accepted',type:'run_code'},{status:'accepted',type:'run_code'},{status:'accepted',type:'final'}])
+ assert.equal(r.events.filter(e=>e.type==='action'&&e.tool==='activate_tool_group').length,1)
+})
+
+test('action rejection diagnostics distinguish schema and size without injecting oversized or truncated output',async()=>{
+ const contract=(await activationContractManifest()).fingerprint,t=task();t.input.initiallyActive=true
+ const invalidField=JSON.stringify({type:'run_code',code:invoke,permission:true})
+ const unicodeInvalid=JSON.stringify({type:'run_code',code:invoke,unexpected:'界'.repeat(3000)})
+ const oversized=JSON.stringify({type:'run_code',code:invoke,unexpected:'x'.repeat(65536)})
+ for(const [text,classification,omitted] of [[invalidField,'invalid-schema',false],[unicodeInvalid,'invalid-schema',true],[oversized,'output-too-large',true]]){
+  const seen=[]
+  const r=await evaluateActivationTask({task:t,contractFingerprint:contract,maxSteps:3,complete:sequence([{text},action(invoke),final(31)],x=>seen.push(x.messages))})
+  assert.equal(r.success,true);assert.equal(r.steps,3);assert.equal(r.actualTargetCalls,1)
+  assert.equal(r.requests[0].status,'completed');assert.equal(r.requests[0].actionValidation.classification,classification)
+  const second=seen[1],feedback=second.map(m=>{try{return JSON.parse(m.content)}catch{return null}}).find(m=>m?.actionRejected)?.actionRejected
+  assert.equal(feedback?.classification,classification);assert.equal(feedback.outputBytes,Buffer.byteLength(text));assert.equal(feedback.outputHash,digest(text));assert.equal(feedback.outputOmitted,omitted)
+  if(omitted){assert.equal(second.some(m=>m.role==='assistant'),false);assert.equal(second.some(m=>m.content.includes(text.slice(0,70))),false)}
+  else assert.equal(second.find(m=>m.role==='assistant')?.content,text)
  }
 })

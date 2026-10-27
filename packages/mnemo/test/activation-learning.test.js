@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {ExecutionExperienceCapture} from '../lib/execution-experience.js'
 import {AutoExperienceLearning,ACTIVATION_INSTRUCTION,loadExperiencePolicy} from '../lib/experience-learning.js'
-import {getActivationSandboxContract,evaluateActivationTask} from '../lib/activation-sandbox.js'
+import {getActivationSandboxContract,evaluateActivationTask} from './helpers/activation-host.mjs'
 import {candidateFingerprint as hash} from '../lib/evaluation.js'
 const scope='project:activation-chain-fixture',contract='a'.repeat(64)
 const corpus=JSON.parse(readFileSync(new URL('../fixtures/activation-timing-corpus.json',import.meta.url)))

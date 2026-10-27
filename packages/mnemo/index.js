@@ -7,6 +7,7 @@ import {registerExecutionExperienceTools} from './lib/execution-experience-tools
 import {AutoExperienceLearning} from './lib/experience-learning.js'
 import {DailyExperience} from './lib/daily-experience.js'
 import {SuccessfulExperiences} from './lib/success-experience.js'
+import {LessonStore,LessonsEngine,buildQuery} from './lib/lessons.js'
 import {DailyRecovery} from './lib/daily-recovery.js'
 import {readCurrentTurnEvents} from './lib/turn-capture.js'
 import {selectCaptureText} from './lib/capture-policy.js'
@@ -168,7 +169,9 @@ export async function apply(ctx, config = {}) {
     }catch{log('[mnemo] daily experience unavailable; legacy memory continues')}
   }
   let successfulExperiences=null
-  if(executionExperience&&config.successfulExperiences?.enabled===true){
+  // lessons.exclusive replaces the legacy per-model successful-method ledger.
+  const legacySuccess = config.successfulExperiences?.enabled === true && !(config.lessons?.enabled === true && config.lessons?.exclusive === true)
+  if(executionExperience&&legacySuccess){
     try{
       successfulExperiences=new SuccessfulExperiences({
         directory:join(dataDir,'successful-experiences'),capture:executionExperience,
@@ -229,7 +232,7 @@ export async function apply(ctx, config = {}) {
       engine.migrateScope(legacy,projectScope(cwd))
     }
     engine.reconcileBacklog()
-    log(`[mnemo] 就绪 · 记忆 ${started.stats.total} 条 · ` +
+    log(`[mnemo] 就绪 · build=${BUILD_ID} · 记忆 ${started.stats.total} 条 · ` +
         `层级 A${started.stats.dist.A}/B${started.stats.dist.B}/C${started.stats.dist.C}/D${started.stats.dist.D} · ` +
         `欠账 ${started.backlog.count} 项(成本 ${started.debt}) · 权限 ${started.authority.mode}`)
   } catch (err) {
@@ -241,6 +244,67 @@ export async function apply(ctx, config = {}) {
 
   const detach = adapter.attach(ctx)
 
+  // Host-driven lessons loop (opt-in, config.lessons.enabled). The acting model
+  // never calls a tool: failures are observed from session events, lessons are
+  // extracted after the turn by an independent model call, and recalled into the
+  // prompt on error or at task start. Independent of the legacy experience ledgers.
+  let lessons = null, lessonsDispose = null
+  // Non-secret provider/model route per session; bound to each queued turn so a turn is never
+  // extracted on another session's route.
+  const lessonsRoutes = new Map()
+  if (config.lessons?.enabled === true && !readOnly) {
+    try {
+      const generate = modelGenerator(ctx)
+      const fixed = config.lessons.extractor?.provider && config.lessons.extractor?.model
+        ? {provider: config.lessons.extractor.provider, model: config.lessons.extractor.model} : null
+      lessons = new LessonsEngine({
+        store: new LessonStore({directory: join(dataDir, 'lessons'), limits: {...config.lessons}}),
+        generate: (system, pack, opts) => {
+          const options = fixed ?? opts?.route
+          if (!options) throw Error('No extractor route for this session')
+          return generate(system, pack, {...opts, agent: {options}, signal: lifetime.signal})
+        },
+        routeOf: sid => lessonsRoutes.get(sid) ?? null,
+        isOptOut: text => memoryOptOut(text) || selectCaptureText(text).hasOptOut,
+        config: config.lessons, log,
+        canWrite: () => !closed && !readOnly && !engine.readOnly,
+      })
+      const watcher = ctx.on('session/event', (session, event) => {
+        try {
+          if (closed || !session?.header?.cwd) return
+          const text = adapter._currentUserText(session)
+          lessons.observe(session, event, {
+            scope: projectScope(session.header.cwd), userText: text,
+            optOut: memoryOptOut(text) || selectCaptureText(text).hasOptOut,
+          })
+        } catch { /* lessons must never affect the task */ }
+      })
+      lessonsDispose = typeof watcher === 'function' ? watcher : () => watcher?.dispose?.()
+      ctx.on('system-prompt/assemble', async (_assembly, asm, next) => {
+        const assembly = await next(), agent = asm?.agent, session = agent?.session
+        if (!lessons || closed || !session?.header?.cwd) return assembly
+        try {
+          try {
+            const {provider, model, reasoningEffort} = generate.snapshot(agent).options
+            lessonsRoutes.delete(String(session.id))
+            lessonsRoutes.set(String(session.id), {provider, model, ...(reasoningEffort ? {reasoningEffort} : {})})
+            while (lessonsRoutes.size > 64) lessonsRoutes.delete(lessonsRoutes.keys().next().value)
+          } catch { /* keep this session's previous route */ }
+          const query = adapter._currentUserText(session)
+          if (memoryOptOut(query) || selectCaptureText(query).hasOptOut || adapter._turnIds.get(session.id) == null) return assembly
+          lessons.noteSeq(String(session.id), session.seq)
+          const text = lessons.contextFor(String(session.id), projectScope(session.header.cwd), buildQuery(session, query))
+          if (text) assembly.contexts.push({name: 'mnemo-lessons', text, interpolate: false})
+        } catch { log('[mnemo] lessons context unavailable; current task continues') }
+        return assembly
+      }, {global: true})
+      log(`[mnemo] lessons loop enabled; exclusive=${config.lessons.exclusive === true}; legacy active: successful=${!!successfulExperiences} execution=${!!executionExperience} auto=${!!autoLearning} daily=${!!dailyLearning}`)
+    } catch (error) {
+      lessons = null
+      log(`[mnemo] lessons unavailable: ${String(error?.message ?? error).slice(0, 120)}`)
+    }
+  }
+
 
   const api = {
     engine,
@@ -251,6 +315,7 @@ export async function apply(ctx, config = {}) {
     dailyLearning,
     dailyRecovery,
     successfulExperiences,
+    lessons,
 
     preTurn: (signal) => engine.preTurn(signal),
 
@@ -296,15 +361,15 @@ export async function apply(ctx, config = {}) {
     lastSnapshot: () => adapter.lastSnapshot,
 
     lastInjection: () => adapter.lastInjection,
-    report: () => ({ buildId: BUILD_ID, readOnly, engine: engine.inspect(), adapter: adapter.report(), start: started }),
+    report: () => ({ lessons: lessons?.report() ?? null, legacy: {successfulExperiences: !!successfulExperiences, executionExperience: !!executionExperience, autoLearning: !!autoLearning, dailyLearning: !!dailyLearning}, buildId: BUILD_ID, readOnly, engine: engine.inspect(), adapter: adapter.report(), start: started }),
     buildId: BUILD_ID,
     readOnly,
     maintenance,
     detach: () => {
       if(closed)return
-      closed=true;lifetime.abort();maintenance.closed=true;detach();experienceChangeDispose?.()
+      closed=true;lifetime.abort();maintenance.closed=true;detach();experienceChangeDispose?.();lessonsDispose?.();lessons?.dispose()
       const finish=()=>{try{sourceReader.dispose();if(!readOnly)engine.checkpoint()}finally{releaseWriter()}}
-      const pending=[...(engine._draining?[engine._draining]:[]),...(executionExperience?[executionExperience.idle()]:[]),...(autoLearning?[autoLearning.idle()]:[]),...(dailyLearning?[dailyLearning.idle()]:[]),...(successfulExperiences?[successfulExperiences.idle()]:[])]
+      const pending=[...(engine._draining?[engine._draining]:[]),...(executionExperience?[executionExperience.idle()]:[]),...(autoLearning?[autoLearning.idle()]:[]),...(dailyLearning?[dailyLearning.idle()]:[]),...(successfulExperiences?[successfulExperiences.idle()]:[]),...(lessons?[lessons.idle()]:[])]
       return pending.length?Promise.allSettled(pending).finally(finish):finish()
     },
     _config: mergeConfig(defaultConfig(), config),

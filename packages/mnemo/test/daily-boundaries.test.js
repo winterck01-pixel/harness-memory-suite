@@ -10,6 +10,11 @@ import {dailyCardOutcome} from '../dsh-adapter.js'
 import {candidateFingerprint as digest} from '../lib/evaluation.js'
 const sandboxOptions=JSON.parse(process.env.MNEMO_TEST_SANDBOX_OPTIONS??'{}')
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}}
+// If setup or authorization fails before reaching a gate, report that result rather
+// than leaving an unresolved Promise which cancels every following test in this file.
+const reached=(gate,invocation)=>Promise.race([gate.promise,invocation.then(result=>{
+ assert.fail('Invocation settled before the expected verification gate: '+JSON.stringify(result))
+})])
 function toolFixture({allowInvocation=async()=>true,noteUse=async()=>({status:'recorded'})}={}){
  let tool,turn=1,plans=0
  const events=[{seq:0,type:'turn/start',data:{turn}},{seq:1,type:'user/message',data:{source:{kind:'user'},content:[{type:'text',text:'Inspect the input and verify the output'}]}}]
@@ -26,7 +31,7 @@ for(const action of ['use_daily','recovery_plan'])test(`${action} rejects same-t
   if(++checks===2){entered.resolve();await release.promise}
   return granted
  },noteUse:async()=>{uses++;return {status:'recorded'}}})
- const pending=f.call(action);await entered.promise;allowed=false;prohibitMemory(f);release.resolve()
+ const pending=f.call(action);await reached(entered,pending);allowed=false;prohibitMemory(f);release.resolve()
  await assert.rejects(pending,/changed/)
  assert.equal(checks,2);assert.equal(uses,0);assert.equal(f.plans,0)
 })
@@ -45,7 +50,7 @@ test('actual daily adoption rejects stale same-turn permission at its final comm
   const delivery={sessionHash:digest(f.session.id),turnHash:digest('1'),receiptHash:'b'.repeat(64)}
   daily.state.cards.card={state:'limited-use',scopeHash:digest(scope),receiptHash:delivery.receiptHash,candidateId:'fixture-source',deliveries:{[key]:delivery}}
   daily._current=async()=>null;daily._save=()=>{writes++;return true}
-  const pending=f.call('use_daily');await entered.promise;allowed=false;prohibitMemory(f);release.resolve()
+  const pending=f.call('use_daily');await reached(entered,pending);allowed=false;prohibitMemory(f);release.resolve()
   const result=JSON.parse(await pending)
   assert.equal(checks,3);assert.notEqual(result.status,'recorded')
   assert.notEqual(delivery.used,true);assert.equal(writes,0)
@@ -54,7 +59,7 @@ test('actual daily adoption rejects stale same-turn permission at its final comm
 test('ordinary tool progress during recovery authorization does not change human consent',async()=>{
  const entered=deferred(),release=deferred();let checks=0
  const f=toolFixture({allowInvocation:async()=>{if(++checks===2){entered.resolve();await release.promise}return true}})
- const pending=f.call('recovery_plan');await entered.promise
+ const pending=f.call('recovery_plan');await reached(entered,pending)
  f.append('tool/result',{message:{toolCallId:'fixture-progress',isError:false,content:[{type:'text',text:'Synthetic input inspection completed'}]}})
  release.resolve()
  assert.equal(JSON.parse(await pending).status,'plan-recorded');assert.equal(f.plans,1)
@@ -62,13 +67,13 @@ test('ordinary tool progress during recovery authorization does not change human
 for(const action of ['use_daily','recovery_plan'])test(`${action} pins the turn before initial authorization await`,async()=>{
  const entered=deferred(),release=deferred();let uses=0
  const f=toolFixture({allowInvocation:async()=>{entered.resolve();await release.promise;return true},noteUse:async()=>{uses++;return {status:'recorded'}}})
- const pending=f.call(action);await entered.promise;f.nextTurn();release.resolve()
+ const pending=f.call(action);await reached(entered,pending);f.nextTurn();release.resolve()
  await assert.rejects(pending,/changed/);assert.equal(uses,0);assert.equal(f.plans,0)
 })
 test('daily recovery rechecks cancellation after final authorization await',async()=>{
  const entered=deferred(),release=deferred();let calls=0
  const f=toolFixture({allowInvocation:async()=>{if(++calls===2){entered.resolve();await release.promise}return true}})
- const pending=f.call('recovery_plan');await entered.promise;f.controller.abort();release.resolve()
+ const pending=f.call('recovery_plan');await reached(entered,pending);f.controller.abort();release.resolve()
  await assert.rejects(pending,{name:'AbortError'});assert.equal(f.plans,0)
 })
 for(const mode of ['turn','cancel','withdraw'])test(`actual noteUse refuses ${mode} during its source verification await`,async()=>{
@@ -80,7 +85,7 @@ for(const mode of ['turn','cancel','withdraw'])test(`actual noteUse refuses ${mo
   daily.state.cards.card={state:'limited-use',scopeHash:digest(scope),receiptHash:'b'.repeat(64),deliveries:{[key]:delivery}}
   daily._current=async()=>{entered.resolve();await release.promise;return null}
   daily._save=()=>{writes++;return true}
-  const pending=f.call('use_daily');await entered.promise
+  const pending=f.call('use_daily');await reached(entered,pending)
   if(mode==='turn')f.nextTurn();if(mode==='cancel')f.controller.abort();if(mode==='withdraw')allowed=false
   release.resolve();const result=JSON.parse(await pending)
   assert.notEqual(result.status,'recorded');assert.notEqual(delivery.used,true);assert.equal(writes,0)
@@ -132,6 +137,7 @@ test('ordinary successful observations stay out of the daily review queue',async
   const capture={hasPendingWork:()=>false,list:()=>candidates,validateCandidate:async()=>({status:'source-unavailable'})}
   const daily=new DailyExperience({directory,sandboxOptions,enabled:true,capture,consumerFingerprint:'a'.repeat(64)})
   const result=await daily.consider(scope)
+  assert.equal(result.status,'considered',JSON.stringify(result))
   assert.equal(result.results[0].status,'not-experience');assert.equal(result.results[1].status,'needs-review')
   const status=daily.status({scope});assert.equal(status.needsReviewCount,1);assert.equal(status.limitedUseCount,0)
  }finally{rmSync(directory,{recursive:true,force:true})}
@@ -146,7 +152,7 @@ for(const mode of ['pending','invalidated'])test(`noteUse rechecks original cand
   daily._current=async()=>null;daily._save=()=>{writes++}
   const guard=async()=>{entered.resolve();await release.promise;return true};guard.current=()=>true
   const result=daily.noteUse(scope,{cardId:'card',sessionId:'invoking-other-session',turnId:1,guard})
-  await entered.promise;if(mode==='pending')pending=true;else current=false;release.resolve()
+  await reached(entered,result);if(mode==='pending')pending=true;else current=false;release.resolve()
   assert.equal((await result).status,'source-changed');assert.notEqual(d.used,true);assert.equal(writes,0)
  }finally{rmSync(directory,{recursive:true,force:true})}
 })

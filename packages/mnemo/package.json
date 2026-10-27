@@ -10,7 +10,8 @@
     "./engine": "./lib/engine.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node test/run.mjs --host-root ../..",
+    "test:unit": "node --test test/lessons*.test.js"
   },
   "license": "MIT",
   "peerDependencies": {
