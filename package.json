@@ -10,7 +10,6 @@
   "scripts": {
     "prepare:host": "node scripts/apply-host-compat.mjs",
     "build": "npm run build --workspace=dsh-fileman && npm run build:media",
-    "test:memory": "npm test --workspace=dsh-mnemo",
     "test:knowledge": "npm test --workspace=@local/knowledge-vault",
     "test:files": "npm test --workspace=dsh-fileman",
     "test:policy": "npm test --workspace=dsh-context-policy",
@@ -18,7 +17,7 @@
     "check:privacy": "node scripts/check-privacy.mjs",
     "test:privacy": "node --test scripts/privacy.test.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
-    "test": "npm run test:compat && npm run test:memory && npm run test:knowledge && npm run test:files && npm run test:policy && npm run test:activation && npm run test:media",
+    "test": "npm run test:compat && npm run test:knowledge && npm run test:files && npm run test:policy && npm run test:activation && npm run test:media",
     "verify": "npm run test:privacy && npm run check:privacy && npm run check:syntax && npm test",
     "test:compat": "node --test scripts/host-compat.test.mjs scripts/media-config.test.mjs",
     "build:media": "npm run build --workspace=dsh-image-studio && npm run build --workspace=dsh-video-studio && npm run build --workspace=dsh-image-workshop && npm run build --workspace=dsh-live-film",

@@ -18,7 +18,36 @@ const successActions=new Set(['success_status','recent_evidence','record_success
 // ordinary facts and frozen optimization candidates. No action grants authority.
 export function registerExecutionExperienceTools(tools,{capture,learning,dailyLearning=null,successfulExperiences=null,dailyRecovery=null,recoveryState=()=>null,ask,assertWritable,lifetime,getSessions,allowInvocation=()=>true}) {
  const claims=new Set()
- tools.register({name:'mnemo_experience',description:'Project-scoped experience. For a useful successful method: independently check the actual result first, recent_evidence returns current-turn result seqs, then record_success with draft {title,cues,conditions,method,limits,evidence:{actionSeqs,checkSeq,expected,summary}}. Evidence references result seqs; check must follow actions and be a separate real tool check. It becomes conditional historical data only after turn-end source validation, never a system rule or proof of superiority. recall_success(query) finds methods; use_success(id,conditionCheck) declares actual use after checking every condition; outcome_success(id,evidence) links a subsequent actual result check; fail_success(id,reason) suspends an adopted unsuitable method. success_status/inspect_success show success methods and pending review. Existing status/list/inspect/review retain frozen execution-candidate semantics; review authorizes frozen sandbox only. recovery_plan records 2-4 steps after error; daily_status/use_daily retain the fixed activation method. No policy changes, ordinary fact-memory writes, skill installation, or unfreezing.',parameters:{type:'object',additionalProperties:false,properties:{action:{type:'string',enum:['status','list','inspect','review','learning_status','daily_status','recovery_plan','use_daily',...successActions]},id:{type:'string'},packetHash:{type:'string'},limit:{type:'integer'},steps:{type:'array',items:{type:'string'}},change:{type:'string'},query:{type:'string',maxLength:2000},draft:successDraft,evidence:successEvidence,conditionCheck:{type:'string',minLength:8,maxLength:1200},reason:{type:'string',minLength:8,maxLength:600}},required:['action']},output:{schema:{type:'string'},render:(_a,v)=>[{type:'text',text:v}]},execute:async(args,exec)=>{
+ // Advertise actual runtime capabilities, not legacy configuration flags. Lessons
+ // exclusive mode can suppress successfulExperiences while retaining capture/daily.
+ const actions=['status','learning_status','daily_status']
+ const descriptions=['Project-scoped experience. status, learning_status and daily_status report availability, including disabled subsystems.']
+ const properties={}
+ if(capture){
+  actions.push('list','inspect','review')
+  descriptions.push('list/inspect/review retain frozen execution-candidate semantics; review authorizes frozen sandbox only.')
+  Object.assign(properties,{id:{type:'string'},packetHash:{type:'string'},limit:{type:'integer'}})
+ }
+ if(dailyLearning){
+  actions.push('use_daily')
+  descriptions.push('use_daily records adoption of the fixed activation method.')
+  properties.id={type:'string'}
+  if(dailyRecovery){
+   actions.push('recovery_plan')
+   descriptions.push('recovery_plan records 2-4 steps after error.')
+   Object.assign(properties,{steps:{type:'array',items:{type:'string'}},change:{type:'string'}})
+  }
+ }
+ if(successfulExperiences){
+  actions.push(...successActions)
+  descriptions.push('For a useful successful method: independently check the actual result first, recent_evidence returns current-turn result seqs, then record_success with draft {title,cues,conditions,method,limits,evidence:{actionSeqs,checkSeq,expected,summary}}. Evidence references result seqs; check must follow actions and be a separate real tool check. It becomes conditional historical data only after turn-end source validation, never a system rule or proof of superiority. recall_success(query) finds methods; use_success(id,conditionCheck) declares actual use after checking every condition; outcome_success(id,evidence) links a subsequent actual result check; fail_success(id,reason) suspends an adopted unsuitable method. success_status/inspect_success show success methods and pending review.')
+  Object.assign(properties,{id:{type:'string'},limit:{type:'integer'},query:{type:'string',maxLength:2000},draft:successDraft,evidence:successEvidence,conditionCheck:{type:'string',minLength:8,maxLength:1200},reason:{type:'string',minLength:8,maxLength:600}})
+ }
+ descriptions.push('No policy changes, ordinary fact-memory writes, skill installation, or unfreezing.')
+ const enabledActions=new Set(actions)
+ tools.register({name:'mnemo_experience',description:descriptions.join(' '),parameters:{type:'object',additionalProperties:false,properties:{action:{type:'string',enum:actions},...properties},required:['action']},output:{schema:{type:'string'},render:(_a,v)=>[{type:'text',text:v}]},execute:async(args,exec)=>{
+  // Stale callers may bypass schema validation; never dispatch an unavailable action.
+  if(!enabledActions.has(args.action))throw Error('Experience action is unavailable or disabled: '+args.action)
   const session=exec?.agent?.session
   if(!session?.id||!session.header?.cwd)throw Error('Trusted invoking project session required')
   const scope=projectScope(session.header.cwd),signal=exec?.signal?AbortSignal.any([exec.signal,lifetime.signal]):lifetime.signal

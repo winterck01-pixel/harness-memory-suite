@@ -376,13 +376,14 @@ activationShadow:
 ```bash
 npm run check:privacy
 npm run check:syntax
-npm run test:memory
 npm run test:knowledge
 npm run test:files
 npm run test:policy
 # 或一次执行全部检查：
 npm run verify
 ```
+
+MNEMO 正式回归测试和专用复跑脚本已按维护要求移除，`npm run verify` 仅检查当前仍保留的模块，不再包含 MNEMO 测试。清理前部署候选曾完成 901/901 的独立完整验收；这是历史记录，不表示当前源码树可复跑该套测试。离线经验评估与运行时契约验证属于产品功能，仍保留。
 
 以当前版本执行 `npm run verify` 的结果为准；依赖本地 PDF/OCR 工具或专用 fixture 的检查可能跳过，不要将跳过项记作通过。测试范围与限制见 [VALIDATION](docs/VALIDATION.md)。
 

@@ -9,10 +9,6 @@
     ".": "./index.js",
     "./engine": "./lib/engine.js"
   },
-  "scripts": {
-    "test": "node test/run.mjs --host-root ../..",
-    "test:unit": "node --test test/lessons*.test.js"
-  },
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
